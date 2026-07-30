@@ -31,10 +31,10 @@ metadata:
   exact corrected bytes in `canonical_body` — resend that, never retry blind.
 - On update, an omitted `render_format` preserves the format and its config.
   To change column types, options, or formulas, resend
-  `render_format: "table"` with the full new `render_config` in the same call
-  — it replaces the stored config wholesale, and `render_config` is never
-  accepted without `render_format` — and the gate re-validates the document's
-  body against it.
+  `render_format: "table"` with the full new `render_config` in the same
+  call; the sent config replaces the stored one wholesale, and
+  `render_config` is never accepted without `render_format`. The gate then
+  re-validates the document's body against the new config.
 
 Emit canonical bytes exactly: every row starts and ends with `|`, one space
 around each cell value, an empty cell is a single space between its pipes,
@@ -43,10 +43,10 @@ A literal `|` inside a cell is written `\|` — the only escape. The document
 ends immediately after the last row with a single newline.
 
 Near-miss tables (alignment colons `:---` / `---:`, extra cell padding,
-missing edge pipes, ragged rows — short rows pad with blank cells, cells
-beyond the header width are dropped — blank checkbox cells, uncomputed or
-stale formula cells) parse but are rejected as non-canonical, with the
-corrected `canonical_body` returned.
+missing edge pipes, ragged rows, blank checkbox cells, uncomputed or stale
+formula cells) parse but are rejected as non-canonical, with the corrected
+`canonical_body` returned. Ragged rows canonicalize to the header width:
+short rows pad with blank cells, cells beyond the header width are dropped.
 
 ## Canonical example
 
@@ -81,7 +81,7 @@ Body:
 | checkbox | `{ "type": "checkbox" }` | `true` or `false`. Blank reads as false and canonicalizes to the literal `false`. |
 | date | `{ "type": "date" }` | Exactly `YYYY-MM-DD` (e.g. `2026-07-10`), no time component. Blank = no value. |
 | select | `{ "type": "select", "options": ["a", "b"] }` | Exactly one of the declared options, or blank. |
-| formula | `{ "type": "formula", "expr": "..." }` | Computed server-side; whatever you send is corrected. See Formulas. |
+| formula | `{ "type": "formula", "expr": "..." }` | Computed server-side; any hand-written value is rejected with the corrected bytes. See Formulas. |
 
 ## Header rules
 
@@ -103,9 +103,9 @@ functions (`now()`, `today()`); no references to other formula columns
 `number`.
 
 Values are materialized into the markdown: the server computes each row's
-value and writes it into the cell, rounded to 2 decimal places. A row where
-a referenced cell is blank (or a divisor is zero) materializes as a blank
-cell.
+value and writes it into the cell, rounded to 2 decimal places. When a
+referenced cell is blank (or a divisor is zero), the formula cell for that
+row materializes as blank.
 
 Edit inputs, not outputs. Formula cells cannot hold hand-written values —
 the serializer recomputes every formula cell on every write, so a formula
@@ -153,7 +153,7 @@ blank:
 | Select value outside the declared options (`paused`) | `unknown_select_option` | Use one of the declared options, or leave the cell blank. |
 | Formula references a formula column | `formula_chain_unsupported` | Inline the other expression instead. |
 | `now()` or `today()` in a formula | `time_dependent_unsupported` | Materialized values would go stale — use only columns, numbers, `+ - * /`. |
-| Formula references an identifier that is no column | `unknown_column_ref` | Reference columns by slugified header (`Unit Price` as `unit_price`). |
+| Formula references an identifier that matches no column | `unknown_column_ref` | Reference columns by slugified header (`Unit Price` as `unit_price`). |
 | Formula references a non-number column | `nonnumeric_formula_operand` | Referenced columns must have type `number`. |
 | Comparison, logic, string, function call, or unparseable expression | `invalid_expr` | Only numbers, column references, and `+ - * /`. |
 | Two headers slugify identically (`Unit Price`, `unit-price`) in a formula table | `slug_collision` | Rename one of the columns. |
