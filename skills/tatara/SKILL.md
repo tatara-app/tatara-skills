@@ -45,7 +45,7 @@ metadata:
 | --- | --- |
 | `Tatara:write_document` | Create or update a markdown document. Omit `target_document_id` to create (`type`, `folder`, `title`, `description`, `body`, `tags` all required); pass it to update as a partial patch — only the fields you send change. |
 | `Tatara:update_document` | Line edits: ordered string replacements (`old_string` → `new_string`) applied to the body only — title, type, tags, folder, and frontmatter are preserved. |
-| `Tatara:create_html_document` | Create a self-contained, static HTML report, dashboard, or visual summary (inline CSS, images as data: URIs, no JavaScript). Use when the visual layout is the point; for prose, write markdown. |
+| `Tatara:create_html_document` | Create a self-contained, static HTML report, dashboard, or visual summary (inline CSS, images as data: URIs, no JavaScript). Use when the visual layout is the point; for prose, write markdown. Create-only — revising an HTML document means writing a replacement. |
 
 **Organize**
 
@@ -60,7 +60,7 @@ metadata:
 
 | Tool | Purpose |
 | --- | --- |
-| `Tatara:delete_document` | Soft-delete a document (recoverable with `Tatara:restore_document`). Rejected, naming the agents, while an agent references it. |
+| `Tatara:delete_document` | Soft-delete a document (recoverable with `Tatara:restore_document`). Rejected while any agent still references the document — the rejection names those agents. |
 | `Tatara:restore_document` | Un-delete a document — back to its original folder if that still exists, else the top level. |
 | `Tatara:delete_folder` | Soft-delete a folder. An empty folder deletes immediately; a non-empty one is rejected with an inventory — confirm with the user, then retry with `cascade: true` to soft-delete the subtree. |
 | `Tatara:restore_folder` | Un-delete a folder and everything that was deleted inside it, in one call. |
@@ -83,13 +83,16 @@ metadata:
    auto-created — create one deliberately with `Tatara:create_folder`.
 4. **Updates are partial.** `Tatara:write_document` with
    `target_document_id` changes only the fields you send — omitted fields,
-   including `body` and `render_format`, are preserved exactly. To move,
-   send just `target_document_id` and `folder`; to rename, `title`; to
-   retag, `tags`. Never resend a body to change metadata.
-5. **Prefer `Tatara:update_document` for edits within a body.** Each
+   including `body` and `render_format`, are preserved exactly. To move as
+   part of a wider update, send `target_document_id` and `folder`; for a
+   pure move — and the only route to the top level — use
+   `Tatara:move_document`. To rename, send `title`; to retag, `tags`.
+   Never resend a body to change metadata.
+5. **Prefer `Tatara:update_document` for edits within a plain body.** Each
    `old_string` must appear in the body and be unique (or pass
    `replace_all`); on any no-match or ambiguous match the whole call is
-   rejected and nothing is written.
+   rejected and nothing is written. For documents with a `render_format`,
+   follow the sibling skill's editing rules instead.
 6. **`body` is the markdown body only** — no YAML frontmatter block.
    `description` is one plain sentence stating what the document is; it
    powers listing and search.
@@ -97,10 +100,12 @@ metadata:
 ## Format catalog
 
 A markdown document may carry a `render_format`, giving it a rich
-interactive view over a canonical body grammar. Set it when creating (plus
-`render_config` for table's typed columns; `render_config` always requires
-`render_format`). On update an omitted `render_format` is preserved — moved
-or edited documents keep their format.
+interactive view over a canonical body grammar. Set it when creating, or
+send it on an update — converting an existing document, or changing a
+table's config — and the gate validates the document's effective body
+against the format. `render_config` declares table's typed columns and
+always requires `render_format`. On update an omitted `render_format` is
+preserved — moved or edited documents keep their format.
 
 | `render_format` | Pick when the document is | Grammar |
 | --- | --- | --- |
@@ -130,10 +135,8 @@ stated fix; never retry the same payload blind.
 
 ## Recovery of deletions
 
-Deletes are soft: `Tatara:delete_document` and `Tatara:delete_folder` remove
-items from the brain but keep them recoverable. `Tatara:restore_document`
-returns a document to its original folder (or the top level if that folder
-is gone) and reports where it landed. `Tatara:restore_folder` — addressed by
-the slug or path the folder had before deletion — brings back the folder and
-its whole deleted subtree in one call; it is rejected if a live folder now
-occupies the path or the parent folder is still deleted.
+Restores report where the item landed: `Tatara:restore_document` returns
+the document's (possibly relocated) path. `Tatara:restore_folder` is
+addressed by the slug or path the folder had before deletion — a deleted
+folder is no longer in the taxonomy — and is rejected if a live folder now
+occupies that path or the parent folder is still deleted.
