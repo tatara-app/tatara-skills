@@ -1,0 +1,22 @@
+{
+  "name": "tatara",
+  "description": "Agent Skills for the Tatara MCP - teach your AI agents to work your company brain",
+  "owner": {
+    "name": "Tatara",
+    "email": "angus@azgard.tech"
+  },
+  "plugins": [
+    {
+      "name": "tatara",
+      "description": "Tatara MCP skills: core workflow plus the kanban, tracker, table, and base document formats",
+      "source": ".",
+      "skills": [
+        "./skills/tatara",
+        "./skills/tatara-base",
+        "./skills/tatara-kanban",
+        "./skills/tatara-table",
+        "./skills/tatara-tracker"
+      ]
+    }
+  ]
+}
