@@ -36,7 +36,10 @@ metadata:
   fences, no cards before the first column heading.
 
 Emit canonical bytes exactly: `-` bullets, lowercase `[x]`, one blank line
-after each heading and between sections. Near-miss markdown (`*`/`+` bullets,
+after each heading and between sections. The document ends immediately after
+its last content line with a single newline — a trailing empty column ends
+right after its `## Heading` line, with no trailing blank line. Near-miss
+markdown (`*`/`+` bullets,
 `1.` ordered items, `###`–`######` headings, setext `---` underlines,
 uppercase `[X]`, extra blank lines) parses but is rejected as non-canonical,
 with the corrected `canonical_body` returned.
