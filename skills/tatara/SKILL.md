@@ -36,7 +36,7 @@ metadata:
 | --- | --- |
 | `Tatara:search_documents` | Full-text search across the brain — ranked results with snippets. Optional `type`, `folder`, and `tags` filters compose with the query. |
 | `Tatara:list_documents` | Browse/enumerate when you have no search terms ("what is in this folder?", "what changed since …?"). Lightweight rows only; scope with `folder`, filter with `updated_since`, paginate with `cursor`. |
-| `Tatara:get_document` | Read one document by `id` or `path`: body, universal keys, custom metadata, links, and backlinks. |
+| `Tatara:get_document` | Read one document by `id` or `path`: body, title, type, tags, custom metadata, links, and backlinks. |
 | `Tatara:get_taxonomy` | The brain's current shape: the real folders (write destinations), the document types in use, the tag registry, and the render-format catalog with canonical examples. Call once at the start of a session that may write; cache it. |
 
 **Write**
