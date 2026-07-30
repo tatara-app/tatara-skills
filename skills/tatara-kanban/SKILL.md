@@ -32,15 +32,16 @@ metadata:
 - Lines indented under a card are detail text, preserved verbatim.
 - Indented `- [ ]` items under a card are subtasks (kept as card detail).
 - Empty columns are allowed: a heading with no cards.
-- Nothing else. No prose outside cards, no `#` H1 or setext headings, no code
-  fences, no cards before the first column heading.
+- Nothing else. No prose outside cards, no `#` H1 or setext `===` headings,
+  no code fences, no cards before the first column heading.
 
 Emit canonical bytes exactly: `-` bullets, lowercase `[x]`, one blank line
 after each heading and between sections. The document ends immediately after
 its last content line with a single newline — a trailing empty column ends
-right after its `## Heading` line, with no trailing blank line. Near-miss
-markdown (`*`/`+` bullets,
-`1.` ordered items, `###`–`######` headings, setext `---` underlines,
+right after its `## Heading` line, with no trailing blank line.
+
+Near-miss markdown (`*`/`+` bullets, `1.` ordered items, `###`–`######`
+headings, closing-hash headings like `## Todo ##`, setext `---` underlines,
 uppercase `[X]`, extra blank lines) parses but is rejected as non-canonical,
 with the corrected `canonical_body` returned.
 
@@ -81,6 +82,7 @@ with the corrected `canonical_body` returned.
   detail lines — from one column section to another. Nothing else changes.
 - Completing a card flips `[ ]` to `[x]` on one line. Renaming a column
   rewrites one heading line.
-- On gate rejection with `canonical_body`, resend those exact bytes (with your
-  intended change applied on top). On rejection with structured errors, fix
-  the reported lines. Never retry the same body blind.
+- On gate rejection with `canonical_body`, your change is already in those
+  bytes, canonicalized — verify it landed, then resend them unmodified. On
+  rejection with structured errors, fix the reported lines. Never retry the
+  same body blind.
