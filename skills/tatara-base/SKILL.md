@@ -20,7 +20,8 @@ metadata:
 - A base keeps all configuration inside its body. Omit `render_config`; a
   non-empty config is rejected with an instruction to resend without it.
 - The body is exactly one ` ```base ` fenced code block containing a YAML
-  mapping with top-level keys `filters`, `properties`, `views`. Nothing else
+  mapping with top-level keys `filters`, `properties`, `views` (only
+  `views` is required). Nothing else
   — no prose before or after the block (context belongs in the document
   description field), no second block.
 - The write gate parses the body before saving. A body that does not parse
@@ -35,10 +36,12 @@ single newline; 2-space indent; block-style lists and mappings only; fixed
 key order — top level `filters`, `properties`, `views`; each property
 `type`, `displayName`, `options`; each view `type`, `name`, `filters`,
 `order`, `sort`, `groupBy`, `limit`, `summaries`. Filter expression strings
-are always single-quoted (double an embedded `'` as `''`); every other
-scalar is written plain unless YAML would misread it, in which case it is
-single-quoted. A lone filter expression is emitted on its own indented line
-under `filters:`, never inline after the key.
+are always single-quoted, with an embedded `'` doubled as `''` — the
+expression `title.contains("it's")` is written `'title.contains("it''s")'`;
+every other scalar is written plain unless YAML would misread it, in which
+case it is single-quoted. A lone filter expression is emitted as a plain
+scalar on its own indented line under `filters:` — never inline after the
+key, and never as a `- ` list item.
 
 Near-miss YAML (flow-style `[a, b]` / `{k: v}`, keys in a different order,
 double-quoted or inline filter expressions, CRLF line endings, blank lines
@@ -217,8 +220,11 @@ are all false).
 
 - Make minimal diffs: change only the YAML lines being edited, and resend
   the full body with `Tatara:write_document`.
-- Adding a column adds one line to a view's `order` (plus a `properties`
-  entry only if it needs a header, type, or options). Adding a view appends
+- Adding a column adds one line to a view's `order`, plus a `properties`
+  entry only if it needs a header, type, or options. A view without `order`
+  first needs the full list written out — the default columns `title`,
+  `type`, `tags`, `updated` — plus the new one, or the view collapses to
+  just the columns listed. Adding a view appends
   one `- type: table` item to `views`. Retitling a column edits one
   `displayName` line. Tightening a view edits only its `filters` node.
 - On gate rejection with `canonical_body`, your change is already in those
