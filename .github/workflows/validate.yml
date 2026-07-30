@@ -1,0 +1,20 @@
+name: validate
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate all skills against the Agent Skills spec
+        run: |
+          set -e
+          for d in skills/*/; do
+            echo "== $d"
+            npx -y skills-ref validate "$d"
+          done
