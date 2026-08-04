@@ -109,9 +109,10 @@ functions (`now()`, `today()`); no references to other formula columns
 `number`.
 
 Values are materialized into the markdown: the server computes each row's
-value and writes it into the cell, rounded to 2 decimal places. When a
-referenced cell is blank (or a divisor is zero), the formula cell for that
-row materializes as blank.
+value and writes it into the cell, rounded to at most 2 decimal places —
+trailing zeros are not written (`37.5`, never `37.50`; whole results stay
+bare, `20`). When a referenced cell is blank (or a divisor is zero), the
+formula cell for that row materializes as blank.
 
 Edit inputs, not outputs. Formula cells cannot hold hand-written values —
 the serializer recomputes every formula cell on every gated write (any
@@ -122,7 +123,11 @@ non-canonical and the write is rejected with the corrected bytes in
 always include it when editing, or a stale formula value is committed
 as-is. Leave formula cells blank on a first write and resend the returned
 `canonical_body`; to change what a formula shows, edit its input cells or
-its `expr`.
+its `expr`. An edit that changes a formula's input changes the dependent
+formula cells too: either write the recomputed values yourself in the same
+body — a hand-written value is accepted exactly when it equals the computed
+value — or leave them as they were and resend the `canonical_body` the
+rejection returns.
 
 Canonical example — `2.33` and `1.8` are the real computed values (9800/4200
 and 5580/3100), and the Print row's ROAS is blank because its Spend is
