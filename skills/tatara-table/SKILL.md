@@ -14,6 +14,10 @@ metadata:
 - Tables are markdown documents with `render_format: "table"`. Create and
   update them with `Tatara:write_document`, passing `render_format: "table"`
   (plus `render_config` for typed columns) on create.
+- This skill is the body grammar only. The write workflow — search first,
+  resolve the folder and tags with `Tatara:get_taxonomy`, and the fields a
+  create requires (`title`, `folder`, `type`, `description`, `tags`) — is
+  the core `tatara` skill; follow it alongside this one.
 - The body is exactly one GFM pipe table: a header row, a separator row, then
   data rows. Nothing else — no prose before or after (context belongs in the
   document description field), no second table. A header-only table with zero
@@ -29,12 +33,14 @@ metadata:
   instruction; cell and header errors carry a line number) plus a canonical
   example. A body that parses but is not byte-canonical is rejected with the
   exact corrected bytes in `canonical_body` — resend that, never retry blind.
-- On update, an omitted `render_format` preserves the format and its config.
-  To change column types, options, or formulas, resend
-  `render_format: "table"` with the full new `render_config` in the same
-  call; the sent config replaces the stored one wholesale, and
-  `render_config` is never accepted without `render_format`. The gate then
-  re-validates the document's body against the new config.
+- On update, an omitted `render_format` preserves the format and its config —
+  but the gate runs only on writes that carry `render_format`, so include
+  `render_format: "table"` on every body edit; without it the new body is
+  committed unchecked against the column types and formulas. Sent alone, it
+  validates against the stored config. To change column types, options, or
+  formulas, resend it with the full new `render_config` in the same call;
+  the sent config replaces the stored one wholesale, and `render_config` is
+  never accepted without `render_format`.
 
 Emit canonical bytes exactly: every row starts and ends with `|`, one space
 around each cell value, an empty cell is a single space between its pipes,
@@ -108,12 +114,15 @@ referenced cell is blank (or a divisor is zero), the formula cell for that
 row materializes as blank.
 
 Edit inputs, not outputs. Formula cells cannot hold hand-written values —
-the serializer recomputes every formula cell on every write, so a formula
-cell that differs from the computed value (stale, wrong, or blank) makes the
-body non-canonical and the write is rejected with the corrected bytes in
-`canonical_body`. Leave formula cells blank on a first write and resend the
-returned `canonical_body`; to change what a formula shows, edit its input
-cells or its `expr`.
+the serializer recomputes every formula cell on every gated write (any
+write that includes `render_format: "table"`), so a formula cell that
+differs from the computed value (stale, wrong, or blank) makes the body
+non-canonical and the write is rejected with the corrected bytes in
+`canonical_body`. A body sent without `render_format` is not re-checked —
+always include it when editing, or a stale formula value is committed
+as-is. Leave formula cells blank on a first write and resend the returned
+`canonical_body`; to change what a formula shows, edit its input cells or
+its `expr`.
 
 Canonical example — `2.33` and `1.8` are the real computed values (9800/4200
 and 5580/3100), and the Print row's ROAS is blank because its Spend is
@@ -161,7 +170,10 @@ blank:
 ## Editing rules
 
 - Make minimal diffs: change only the cells being edited, and resend the
-  full body with `Tatara:write_document`.
+  full body with `Tatara:write_document`, always including
+  `render_format: "table"` — the gate validates only writes that carry
+  `render_format`; the stored config is used when `render_config` is
+  omitted.
 - Editing a cell rewrites the text between that cell's pipes. Adding a row
   adds one line. Adding, removing, or renaming a column touches the header
   row, the separator row, and every data row — and when that column is typed

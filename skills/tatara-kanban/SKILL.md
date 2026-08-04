@@ -14,6 +14,10 @@ metadata:
 - Kanban boards are markdown documents with `render_format: "kanban"`. Create
   and update them with `Tatara:write_document`, passing
   `render_format: "kanban"` on create.
+- This skill is the body grammar only. The write workflow — search first,
+  resolve the folder and tags with `Tatara:get_taxonomy`, and the fields a
+  create requires (`title`, `folder`, `type`, `description`, `tags`) — is
+  the core `tatara` skill; follow it alongside this one.
 - The kanban format takes no configuration in v1 — column names and order live
   in the document body. Omit `render_config`; a non-empty config is rejected.
 - The write gate parses the body before saving. A body that does not parse as
@@ -29,16 +33,20 @@ metadata:
 - Every column is a `## Heading`. Column order in the body is board order.
 - Every card is a top-level `- [ ]` (open) or `- [x]` (done) list item under a
   column heading.
-- Lines indented under a card are detail text, preserved verbatim.
+- Lines indented under a card are detail text, preserved byte-verbatim —
+  any indent that markdown ties to the card round-trips unchanged; the
+  canonical example uses two spaces.
 - Indented `- [ ]` items under a card are subtasks (kept as card detail).
 - Empty columns are allowed: a heading with no cards.
 - Nothing else. No prose outside cards, no `#` H1 or setext `===` headings,
   no code fences, no cards before the first column heading.
 
-Emit canonical bytes exactly: `-` bullets, lowercase `[x]`, one blank line
-after each heading and between sections. The document ends immediately after
-its last content line with a single newline — a trailing empty column ends
-right after its `## Heading` line, with no trailing blank line.
+Emit canonical bytes exactly: `-` bullets, lowercase `[x]`; a heading with
+cards has one blank line after it, and adjacent sections are separated by
+one blank line — an empty column is just its `## Heading` line, so a middle
+empty column is followed by one blank line (the section separator) and a
+trailing empty column by nothing. The document ends immediately after its
+last content line with a single newline.
 
 Near-miss markdown (`*`/`+` bullets, `1.` ordered items, `###`–`######`
 headings, closing-hash headings like `## Todo ##`, setext `---` underlines,
@@ -77,7 +85,9 @@ with the corrected `canonical_body` returned.
 ## Editing rules
 
 - Make minimal diffs: change only the lines of the element being edited, and
-  resend the full body with `Tatara:write_document`.
+  resend the full body with `Tatara:write_document`, always including
+  `render_format: "kanban"` — the gate validates only writes that carry
+  `render_format`, so a body sent without it is committed unchecked.
 - Moving a card moves exactly one list item — its title line plus its indented
   detail lines — from one column section to another. Nothing else changes.
 - Completing a card flips `[ ]` to `[x]` on one line. Renaming a column

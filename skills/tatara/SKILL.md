@@ -24,7 +24,11 @@ metadata:
   title, a folder's from its name. Retitling a document or renaming a folder
   re-derives its slug and path, and everything affected — descendant paths,
   inbound wikilinks — updates automatically.
-- Documents reference each other with `[[wikilinks]]`. `Tatara:get_document`
+- Documents reference each other with `[[wikilinks]]`. `[[Note Title]]` (no
+  `/`) targets a document by its title, case-insensitively — if several
+  documents share the title, the shallowest path wins, then alphabetical.
+  `[[path/to/doc]]` (contains `/`) targets by exact full path.
+  `[[target|display text]]` renders the display text. `Tatara:get_document`
   returns each document's outbound `links` and inbound `backlinks` — follow
   them with further calls to traverse the knowledge graph.
 
@@ -93,9 +97,11 @@ metadata:
    `replace_all`); on any no-match or ambiguous match the whole call is
    rejected and nothing is written. For documents with a `render_format`,
    follow the sibling skill's editing rules instead.
-6. **`body` is the markdown body only** — no YAML frontmatter block.
-   `description` is one plain sentence stating what the document is; it
-   powers listing and search.
+6. **`body` is the markdown body only** — no YAML frontmatter block, and no
+   H1 repeating the title (the title lives in the `title` field; open the
+   body on content, using `##` and below for headings). `description` is one
+   plain sentence stating what the document is; it powers listing and
+   search.
 
 ## Format catalog
 

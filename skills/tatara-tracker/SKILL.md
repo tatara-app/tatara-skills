@@ -14,6 +14,10 @@ metadata:
 - Trackers are markdown documents with `render_format: "tracker"`. Create and
   update them with `Tatara:write_document`, passing `render_format: "tracker"`
   on create.
+- This skill is the body grammar only. The write workflow — search first,
+  resolve the folder and tags with `Tatara:get_taxonomy`, and the fields a
+  create requires (`title`, `folder`, `type`, `description`, `tags`) — is
+  the core `tatara` skill; follow it alongside this one.
 - The tracker format takes no configuration in v1 — grouping and filters are
   chosen in the UI toolbar. Omit `render_config`; a non-empty config is
   rejected.
@@ -72,6 +76,10 @@ Inline tokens on a task's title line:
 Other task-emoji conventions (🔁 ⏳ 🛫 ➕) are not tracker signifiers — they
 are plain title text, preserved verbatim.
 
+Task `#tags` are free-form title text, independent of the document-level
+`tags` input and its registry — any token matching the character rules is
+accepted and indexed; it does not need to exist in the taxonomy.
+
 ## Canonical example
 
 ```markdown
@@ -110,7 +118,9 @@ Every signifier on one task line (also canonical):
 ## Editing rules
 
 - Make minimal diffs: change only the lines of the element being edited, and
-  resend the full body with `Tatara:write_document`.
+  resend the full body with `Tatara:write_document`, always including
+  `render_format: "tracker"` — the gate validates only writes that carry
+  `render_format`, so a body sent without it is committed unchecked.
 - Completing a task flips `[ ]` to `[x]` on one line. Rescheduling rewrites
   one `📅` value. Moving a task between sections moves exactly one list
   item — its title line plus its indented detail lines. Nothing else changes.

@@ -17,6 +17,10 @@ metadata:
   `created`, `updated`, `folder`) and frontmatter keys. Create and update
   them with `Tatara:write_document`, passing `render_format: "base"` on
   create.
+- This skill is the body grammar only. The write workflow — search first,
+  resolve the folder and tags with `Tatara:get_taxonomy`, and the fields a
+  create requires (`title`, `folder`, `type`, `description`, `tags`) — is
+  the core `tatara` skill; follow it alongside this one.
 - A base keeps all configuration inside its body. Omit `render_config`; a
   non-empty config is rejected with an instruction to resend without it.
 - The body is exactly one ` ```base ` fenced code block containing a YAML
@@ -39,9 +43,19 @@ key order — top level `filters`, `properties`, `views`; each property
 are always single-quoted, with an embedded `'` doubled as `''` — the
 expression `title.contains("it's")` is written `'title.contains("it''s")'`;
 every other scalar is written plain unless YAML would misread it, in which
-case it is single-quoted. A lone filter expression is emitted as a plain
-scalar on its own indented line under `filters:` — never inline after the
-key, and never as a `- ` list item.
+case it is single-quoted. A lone filter expression is emitted single-quoted
+(like every filter expression) on its own indented line under `filters:` —
+never inline after the key, and never as a `- ` list item:
+
+````markdown
+```base
+filters:
+  'type == "competitor"'
+views:
+  - type: table
+    name: All
+```
+````
 
 Near-miss YAML (flow-style `[a, b]` / `{k: v}`, keys in a different order,
 double-quoted or inline filter expressions, CRLF line endings, blank lines
@@ -219,7 +233,9 @@ are all false).
 ## Editing rules
 
 - Make minimal diffs: change only the YAML lines being edited, and resend
-  the full body with `Tatara:write_document`.
+  the full body with `Tatara:write_document`, always including
+  `render_format: "base"` — the gate validates only writes that carry
+  `render_format`, so a body sent without it is committed unchecked.
 - Adding a column adds one line to a view's `order`, plus a `properties`
   entry only if it needs a header, type, or options. A view without `order`
   first needs the full list written out — the default columns `title`,
