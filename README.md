@@ -46,6 +46,7 @@ upload it in **Settings → Capabilities → Skills**.
 | `tatara-tracker` | Author task trackers: sections, task items, and signifier tokens (tags, priority, 📅 due, ✅ done). |
 | `tatara-table` | Author typed data tables: one pipe table + typed columns (`render_config`), formula columns. |
 | `tatara-base` | Author bases (saved views): the single `base`-fenced YAML block — filters, properties, views. |
+| `tatara-mindmap` | Author mind maps: `## Heading` branches off the document title, nested `- ` topics, subtree edits. |
 
 ## License
 
