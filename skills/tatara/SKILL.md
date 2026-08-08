@@ -1,6 +1,6 @@
 ---
 name: tatara
-description: Works with a company's Tatara brain over the Tatara MCP server - finding, reading, creating, organizing, and recovering governed documents and folders. Use when any task involves Tatara or its MCP tools - writing or updating documents, creating or moving folders, searching or listing company knowledge, tagging with the taxonomy, choosing a render format (kanban board, task tracker, data table, base view), or restoring deleted items. Covers the write workflow (search first, resolve the folder, then write), slug and wikilink behavior, universal keys, render_format selection, and how to recover when a write is rejected by a validation gate.
+description: Works with a company's Tatara brain over the Tatara MCP server - finding, reading, creating, organizing, and recovering governed documents and folders. Use when any task involves Tatara or its MCP tools - writing or updating documents, creating or moving folders, searching or listing company knowledge, tagging with the taxonomy, choosing a render format (kanban board, task tracker, data table, base view, mind map), or restoring deleted items. Covers the write workflow (search first, resolve the folder, then write), slug and wikilink behavior, universal keys, render_format selection, and how to recover when a write is rejected by a validation gate.
 license: MIT
 compatibility: Requires the Tatara MCP server connected
 metadata:
@@ -119,6 +119,7 @@ preserved — moved or edited documents keep their format.
 | `tracker` | a task checklist with tags, priority, and dates | sibling skill `tatara-tracker` |
 | `table` | typed records in a single grid | sibling skill `tatara-table` |
 | `base` | a saved view / index over the brain's other documents | sibling skill `tatara-base` |
+| `mindmap` | branching structure — topics radiating from the title | sibling skill `tatara-mindmap` |
 | omitted | plain prose or notes — the default | — |
 
 Each format's body must parse and be byte-canonical; load the matching
