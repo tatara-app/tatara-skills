@@ -120,6 +120,7 @@ preserved — moved or edited documents keep their format.
 | `table` | typed records in a single grid | sibling skill `tatara-table` |
 | `base` | a saved view / index over the brain's other documents | sibling skill `tatara-base` |
 | `mindmap` | branching structure — topics radiating from the title | sibling skill `tatara-mindmap` |
+| `dashboard` | a composed homepage of live blocks over the brain's other documents | sibling skill `tatara-dashboard` |
 | omitted | plain prose or notes — the default | — |
 
 Each format's body must parse and be byte-canonical; load the matching
