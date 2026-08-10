@@ -1,6 +1,6 @@
 ---
 name: tatara
-description: Works with a company's Tatara brain over the Tatara MCP server - finding, reading, creating, organizing, and recovering governed documents and folders. Use when any task involves Tatara or its MCP tools - writing or updating documents, creating or moving folders, searching or listing company knowledge, tagging with the taxonomy, choosing a render format (kanban board, task tracker, data table, base view, mind map), or restoring deleted items. Covers the write workflow (search first, resolve the folder, then write), slug and wikilink behavior, universal keys, render_format selection, and how to recover when a write is rejected by a validation gate.
+description: Works with a company's Tatara brain over the Tatara MCP server - finding, reading, creating, organizing, and recovering governed documents and folders. Use when any task involves Tatara or its MCP tools - writing or updating documents, creating or moving folders, storing or embedding image assets, searching or listing company knowledge, tagging with the taxonomy, choosing a render format (kanban board, task tracker, data table, base view, mind map), or restoring deleted items. Covers the write workflow (search first, resolve the folder, then write), slug and wikilink behavior, universal keys, render_format selection, and how to recover when a write is rejected by a validation gate.
 license: MIT
 compatibility: Requires the Tatara MCP server connected
 metadata:
@@ -12,8 +12,8 @@ metadata:
 ## The model
 
 - A brain is a company's governed knowledge store: folders holding markdown
-  documents (plus static HTML documents). Agents and humans read and write
-  the same documents over the Tatara MCP server.
+  documents (plus static HTML documents and image assets). Agents and humans
+  read and write the same documents over the Tatara MCP server.
 - Four universal keys live on every document — `title`, `type`,
   `description`, `tags` — set through explicit tool inputs, never as a YAML
   frontmatter block inside `body`. Universal keys placed in the optional
@@ -42,6 +42,7 @@ metadata:
 | `Tatara:list_documents` | Browse/enumerate when you have no search terms ("what is in this folder?", "what changed since …?"). Lightweight rows only; scope with `folder`, filter with `updated_since`, paginate with `cursor`. |
 | `Tatara:get_document` | Read one document by `id` or `path`: body, title, type, tags, custom metadata, links, and backlinks. |
 | `Tatara:get_taxonomy` | The brain's current shape: the real folders (write destinations), the document types in use, the tag registry, and the render-format catalog with canonical examples. Call once at the start of a session that may write; cache it. |
+| `Tatara:get_asset` | An image asset's metadata plus its two URLs: the stable `embed_url` for referencing the image inside document bodies, and a short-lived signed `download_url` for pulling the bytes (never store it in a document). Assets are ordinary documents with `file_type: image` — find their ids with search or list. |
 
 **Write**
 
@@ -49,7 +50,8 @@ metadata:
 | --- | --- |
 | `Tatara:write_document` | Create or update a markdown document. Omit `target_document_id` to create (`type`, `folder`, `title`, `description`, `body`, `tags` all required); pass it to update as a partial patch — only the fields you send change. |
 | `Tatara:update_document` | Line edits: ordered string replacements (`old_string` → `new_string`) applied to the body only — title, type, tags, folder, and frontmatter are preserved. |
-| `Tatara:create_html_document` | Create a self-contained, static HTML report, dashboard, or visual summary (inline CSS, images as data: URIs, no JavaScript). Use when the visual layout is the point; for prose, write markdown. Create-only — revising an HTML document means writing a replacement. |
+| `Tatara:create_html_document` | Create a self-contained, static HTML report, dashboard, or visual summary (inline CSS, images via asset embed URLs or data: URIs, no JavaScript). Use when the visual layout is the point; for prose, write markdown. Create-only — revise by sending a replacement body through `Tatara:write_document`. Grammar and image embedding: sibling skill `tatara-html`. |
+| `Tatara:upload_asset` | Store an image (PNG/JPEG/WebP/GIF, ≤10 MB) as a governed asset document in the folder tree. Send `source_url` (preferred — the server fetches the bytes) or `data_base64`; the result's stable `embed_url` is how markdown and HTML documents reference the image. Create-only — revising an image means uploading a new asset. |
 
 **Organize**
 
