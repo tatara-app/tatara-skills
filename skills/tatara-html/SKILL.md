@@ -1,6 +1,6 @@
 ---
 name: tatara-html
-description: Authors and revises Tatara HTML documents (file_type html) - complete, self-contained, static HTML written with Tatara:create_html_document and rendered read-only in a sandboxed iframe. Use when creating a styled report, one-pager, or visual summary in a Tatara brain, when embedding images or charts in one, or when an HTML write is rejected with issues (incomplete, script, external_reference, size). Covers the complete-document rule, why JavaScript and external references never work, the 5 MB cap, embedding images as inline SVG or base64 data URIs, and revising via Tatara:write_document.
+description: Authors and revises Tatara HTML documents (file_type html) - complete, self-contained, static HTML written with Tatara:create_html_document and rendered read-only in a sandboxed iframe. Use when creating a styled report, one-pager, or visual summary in a Tatara brain, when embedding images or charts in one, or when an HTML write is rejected with issues (incomplete, script, external_reference, size). Covers the complete-document rule, why JavaScript and external references never work, the 5 MB cap, embedding images from brain image assets (Tatara:upload_asset embed URLs), as inline SVG, or as base64 data URIs, and revising via Tatara:write_document.
 license: MIT
 compatibility: Requires the Tatara MCP server connected
 metadata:
@@ -34,10 +34,12 @@ metadata:
 ## The render sandbox — why the rules exist
 
 The document renders in a sandboxed iframe that executes no JavaScript and
-whose Content-Security-Policy blocks every network request. Nothing outside
-the document's own bytes will ever load or run. Everything — styling, images,
-fonts, data — must travel inside the document. The write gate rejects the
-known breakers up front so you fix them before the document is ever stored.
+whose Content-Security-Policy blocks every remote network request. Exactly
+one outside resource loads: a same-origin brain-asset image
+(`/api/brain/assets/<document_id>/content` — the CSP allows `img-src
+'self'`). Everything else — styling, fonts, data, any other image — must
+travel inside the document's own bytes. The write gate rejects the known
+breakers up front so you fix them before the document is ever stored.
 
 ## What the gate enforces
 
@@ -48,16 +50,20 @@ instructive entry per broken rule — fix each and resend; never retry blind.
 | --- | --- | --- |
 | `incomplete` | A fragment — no `<html>`…`</html>` root | Send a complete document: `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>`. |
 | `script` | Any `<script>` element | Remove it. Scripts never run; interactive or script-rendered content appears broken or empty. Inline the finished result as static HTML/CSS. |
-| `external_reference` | Remote URLs (`http:`, `https:`, `//…`) in resource positions: `src`, `srcset`, `poster`, `background`, `<link href>`, CSS `url()`, `@import` | Inline stylesheets into a `<style>` block; embed images and fonts as `data:` URIs. Hyperlinks (`<a href="https://…">`) are allowed — only resource loads are rejected. |
+| `external_reference` | Remote URLs (`http:`, `https:`, `//…`) in resource positions: `src`, `srcset`, `poster`, `background`, `<link href>`, CSS `url()`, `@import` | Inline stylesheets into a `<style>` block. For images, reference brain assets by their stable embed URL (upload via `Tatara:upload_asset`), or embed small one-offs as `data:` URIs. Hyperlinks (`<a href="https://…">`) are allowed — only resource loads are rejected. |
 | `size` | Body over 5 MB | Recompress or resize embedded images, or split into multiple documents. |
 | `empty` | An empty body | Send the document. |
 
-Two traps the gate does NOT catch:
+Three traps the gate does NOT catch:
 
-- A **relative or root-relative** resource URL (`src="chart.png"`,
-  `src="/assets/logo.png"`) passes the gate but renders as a broken image —
-  there is no file store behind the document, so the path resolves to
-  nothing. Embed the bytes instead.
+- A **made-up relative path** (`src="chart.png"`, `src="/images/logo.png"`)
+  passes the gate but renders as a broken image — the only path that serves
+  image bytes is the asset embed form `/api/brain/assets/<document_id>/content`,
+  with an id returned by `Tatara:upload_asset` or `Tatara:get_asset`.
+- A **signed/temporary URL** (`download_url` from `Tatara:get_asset`, a
+  storage or generation-service URL) is remote, so the gate rejects it — but
+  even same-origin expiring links must never be stored: always embed the
+  stable `embed_url`.
 - `data:` URIs pass unchecked — a malformed or truncated one renders broken.
   Encode from the real bytes; never invent base64.
 
@@ -77,17 +83,22 @@ Two traps the gate does NOT catch:
 
 ## Images
 
-Exactly two mechanisms put an image in a Tatara HTML document:
+Exactly three mechanisms put an image in a Tatara HTML document:
 
-1. **Inline `<svg>` markup** — charts, diagrams, icons, logos you draw.
-2. **A `data:` URI** — raster bytes (photo, screenshot, generated image)
-   base64-encoded into the `src` itself.
+1. **A brain image asset** — the preferred route for real rasters (photos,
+   screenshots, generated images). Store the image with
+   `Tatara:upload_asset` (or find an existing one), then reference its
+   stable `embed_url`: `<img src="/api/brain/assets/<document_id>/content">`.
+   Assets are governed documents (`file_type: image`) in the folder tree,
+   and their bytes do not count against this document's 5 MB.
+2. **Inline `<svg>` markup** — charts, diagrams, icons, logos you draw.
+3. **A `data:` URI** — small one-off raster bytes base64-encoded into the
+   `src` itself, when a governed, reusable asset isn't warranted.
 
-There is no image hosting in Tatara: a brain holds markdown and HTML pages,
-not image files, so there is nothing an `<img>` can point at — external URLs
-are rejected and relative paths render broken. The image bytes travel inside
-the document. For the full workflow — choosing the mechanism, encoding
-recipes, the size budget — read [references/images.md](references/images.md).
+Any other reference breaks: external URLs are rejected by the gate, and
+invented relative paths render broken. For the full workflow — the asset
+tools, choosing the mechanism, encoding recipes, the size budget — read
+[references/images.md](references/images.md).
 
 ## Revising an HTML document
 
