@@ -49,7 +49,7 @@ metadata:
 | --- | --- |
 | `Tatara:write_document` | Create or update a markdown document. Omit `target_document_id` to create (`type`, `folder`, `title`, `description`, `body`, `tags` all required); pass it to update as a partial patch — only the fields you send change. |
 | `Tatara:update_document` | Line edits: ordered string replacements (`old_string` → `new_string`) applied to the body only — title, type, tags, folder, and frontmatter are preserved. |
-| `Tatara:create_html_document` | Create a self-contained, static HTML report, dashboard, or visual summary (inline CSS, images as data: URIs, no JavaScript). Use when the visual layout is the point; for prose, write markdown. Create-only — revising an HTML document means writing a replacement. |
+| `Tatara:create_html_document` | Create a self-contained, static HTML report, dashboard, or visual summary (inline CSS, images as data: URIs, no JavaScript). Use when the visual layout is the point; for prose, write markdown. Create-only — revise by sending a replacement body through `Tatara:write_document`. Grammar and image embedding: sibling skill `tatara-html`. |
 
 **Organize**
 
