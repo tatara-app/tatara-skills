@@ -1,6 +1,6 @@
 ---
 name: tatara-html
-description: Authors and revises Tatara HTML documents (file_type html) - complete, self-contained, static HTML written with Tatara:create_html_document and rendered read-only in a sandboxed iframe. Use when creating a styled report, one-pager, or visual summary in a Tatara workspace, when embedding images or charts in one, or when an HTML write is rejected with issues (incomplete, script, external_reference, size). Covers the complete-document rule, why JavaScript and external references never work, the 5 MB cap, embedding images from workspace image assets (Tatara:upload_asset embed URLs), as inline SVG, or as base64 data URIs, and revising via Tatara:write_document.
+description: Authors and revises Tatara HTML documents (file_type html) - complete, self-contained, static HTML written with Tatara:create_html_document and rendered read-only in a sandboxed iframe. Use when creating a styled report, one-pager, or visual summary in a Tatara workspace, when embedding images or charts in one, or when an HTML write is rejected with issues (incomplete, script, external_reference, size). Covers the complete-document rule, why JavaScript never runs and external references are blocked (Google Fonts aside), the 5 MB cap, embedding images from workspace image assets (Tatara:upload_asset embed URLs), as inline SVG, or as base64 data URIs, and revising via Tatara:write_document.
 license: MIT
 compatibility: Requires the Tatara MCP server connected
 metadata:

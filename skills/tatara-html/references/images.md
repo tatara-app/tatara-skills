@@ -68,9 +68,12 @@ scales losslessly, and costs a fraction of the bytes of a raster.
 </svg>
 ```
 
-Rules inside the SVG: no `<script>` (the gate scans the whole body), no
-remote references (`<image href="https://…">`, remote fonts in SVG CSS —
-both rejected), size with `viewBox` plus CSS width so it scales.
+Rules inside the SVG: no `<script>` (the gate scans the whole body), and no
+remote references. A remote CSS `@import` or `url()` is rejected unless it
+points at Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`). An
+`<image href="https://…">` passes the gate but renders broken, because the
+sandbox blocks remote images. Size with `viewBox` plus CSS width so it
+scales.
 
 ## data: URIs
 
