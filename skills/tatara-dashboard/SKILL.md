@@ -14,8 +14,8 @@ metadata:
 - Dashboards are markdown documents with `render_format: "dashboard"` — a
   composed, read-only homepage over the other documents in a workspace.
   Every query block re-runs live against the current documents; the
-  dashboard shows the workspace as it is now, not as it was when written. Create and
-  update them with `Tatara:write_document`, passing
+  dashboard shows the workspace as it is now, not as it was when written.
+  Create and update them with `Tatara:write_document`, passing
   `render_format: "dashboard"` on create.
 - This skill is the body grammar only. The write workflow — search first,
   resolve the folder and tags with `Tatara:get_taxonomy`, and the fields a

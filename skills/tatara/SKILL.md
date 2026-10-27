@@ -13,14 +13,20 @@ metadata:
 
 - A workspace is a company's governed knowledge store: folders holding
   markdown documents (plus static HTML documents and image and PDF assets).
-  People and agents read and write the same documents over the Tatara MCP
-  server.
+  People (in the Tatara app) and agents (over the Tatara MCP server) read
+  and write the same documents.
+- Each MCP connection is locked to one workspace: every read and write
+  goes to that workspace only, and no tool lists or switches workspaces.
+  To use another workspace, the user connects a separate entry or
+  re-authenticates this one.
 - Four universal keys live on every document — `title`, `type`,
   `description`, `tags` — set through explicit tool inputs, never as a YAML
   frontmatter block inside `body`. Universal keys placed in the optional
   `frontmatter` object are ignored (the explicit inputs are authoritative);
-  `frontmatter` is for custom keys only. `source` is stamped from your auth
-  token — never send it.
+  `frontmatter` is for custom keys only, and each key must be a registered
+  field from `Tatara:get_taxonomy`. An unregistered key or ill-typed value
+  rejects the whole write, and the rejection lists the registered fields.
+  `source` is stamped from your auth token — never send it.
 - Slugs are derived, never supplied: a document's slug and path come from its
   title, a folder's from its name. Retitling a document or renaming a folder
   re-derives its slug and path, and everything affected — descendant paths,
@@ -42,8 +48,8 @@ metadata:
 | `Tatara:search_documents` | Full-text search across the workspace — ranked results with snippets. Optional `type`, `folder`, and `tags` filters compose with the query. |
 | `Tatara:list_documents` | Browse/enumerate when you have no search terms ("what is in this folder?", "what changed since …?"). Lightweight rows only; scope with `folder`, filter with `updated_since`, paginate with `cursor`. |
 | `Tatara:get_document` | Read one document by `id` or `path`: body, title, type, tags, custom metadata, links, and backlinks. |
-| `Tatara:get_taxonomy` | The workspace's current shape: the real folders (write destinations), the document types in use, the tag registry, and the render-format catalog with canonical examples. Call once at the start of a session that may write; cache it. |
-| `Tatara:get_asset` | An asset's metadata (image or PDF) plus its two URLs: the stable `embed_url` for referencing the asset inside document bodies, and a short-lived signed `download_url` for pulling the bytes (never store it in a document). Assets are ordinary documents with `file_type: image` or `pdf` — find their ids with search or list. |
+| `Tatara:get_taxonomy` | The workspace's current shape: its organization rules when it has them (follow them when choosing or creating folders), the real folders (write destinations), the document types in use, the tag registry, the custom-field registry (the only `frontmatter` keys writes accept), and the render-format catalog with canonical examples. Call once at the start of a session that may write; cache it. |
+| `Tatara:get_asset` | An image or PDF asset's metadata plus its two URLs: the stable `embed_url` for referencing the asset inside document bodies (only an image renders inline from it; a PDF does not display as an image), and a short-lived signed `download_url` for pulling the bytes (never store it in a document). Assets are ordinary documents with `file_type: image` or `pdf` — find their ids with search or list. |
 
 **Write**
 
@@ -52,7 +58,7 @@ metadata:
 | `Tatara:write_document` | Create or update a markdown document. Omit `target_document_id` to create (`type`, `folder`, `title`, `description`, `body`, `tags` all required); pass it to update as a partial patch — only the fields you send change. |
 | `Tatara:update_document` | Line edits: ordered string replacements (`old_string` → `new_string`) applied to the body only — title, type, tags, folder, and frontmatter are preserved. |
 | `Tatara:create_html_document` | Create a self-contained, static HTML report, dashboard, or visual summary (inline CSS, images via asset embed URLs or data: URIs, no JavaScript). Use when the visual layout is the point; for prose, write markdown. Create-only — revise by sending a replacement body through `Tatara:write_document`. Grammar and image embedding: sibling skill `tatara-html`. |
-| `Tatara:upload_asset` | Store an image or PDF (PNG/JPEG/WebP/GIF/PDF, ≤10 MB) as a governed asset document in the folder tree. Send `source_url` (preferred — the server fetches the bytes) or `data_base64`; the result's stable `embed_url` is how markdown and HTML documents reference the image. Create-only — revising an image means uploading a new asset. |
+| `Tatara:upload_asset` | Store an image or PDF (PNG/JPEG/WebP/GIF/PDF, ≤10 MB) as a governed asset document in the folder tree. Send `source_url` (preferred — the server fetches the bytes) or `data_base64`; the result's stable `embed_url` is how markdown and HTML documents reference the asset. Only an image renders inline from it; a PDF does not display as an image. Create-only; to revise an asset, upload a new one. |
 
 **Organize**
 
@@ -61,7 +67,7 @@ metadata:
 | `Tatara:create_folder` | Create exactly one folder: `name` and `description` (one plain sentence on what belongs in the folder), plus optional `parent` (omit for top level). Reuse an existing folder wherever one fits; the slug is derived from the name. |
 | `Tatara:move_document` | Move a document to a different folder, or to the top level when `target_folder` is omitted. |
 | `Tatara:move_folder` | Move a folder — and everything inside it — under a new parent, or to the top level; contained paths update automatically. |
-| `Tatara:update_folder` | Rename a folder or update its description (send `name`, `description`, or both). A new name re-derives its slug and path, and the paths of everything inside update to match. |
+| `Tatara:update_folder` | Rename a folder or update its description: `folder` (its slug or full path) plus `name`, `description`, or both. A new name re-derives the folder's slug and path, and the paths of everything inside update to match. |
 
 **Recover**
 
