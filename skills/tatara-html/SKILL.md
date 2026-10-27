@@ -34,12 +34,14 @@ metadata:
 ## The render sandbox — why the rules exist
 
 The document renders in a sandboxed iframe that executes no JavaScript and
-whose Content-Security-Policy blocks every remote network request. Exactly
-one outside resource loads: a same-origin workspace-asset image
+whose Content-Security-Policy blocks remote network requests. Two outside
+sources load: a same-origin workspace-asset image
 (`/api/brain/assets/<document_id>/content` — the CSP allows `img-src
-'self'`). Everything else — styling, fonts, data, any other image — must
-travel inside the document's own bytes. The write gate rejects the known
-breakers up front so you fix them before the document is ever stored.
+'self'`), and Google Fonts (stylesheets from `fonts.googleapis.com`, font
+files from `fonts.gstatic.com`). Everything else — styling, other fonts,
+data, any other image — must travel inside the document's own bytes. The
+write gate rejects the known breakers up front so you fix them before the
+document is ever stored.
 
 ## What the gate enforces
 
@@ -50,7 +52,7 @@ instructive entry per broken rule — fix each and resend; never retry blind.
 | --- | --- | --- |
 | `incomplete` | A fragment — no `<html>`…`</html>` root | Send a complete document: `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>`. |
 | `script` | Any `<script>` element | Remove it. Scripts never run; interactive or script-rendered content appears broken or empty. Inline the finished result as static HTML/CSS. |
-| `external_reference` | Remote URLs (`http:`, `https:`, `//…`) in resource positions: `src`, `srcset`, `poster`, `background`, `<link href>`, CSS `url()`, `@import` | Inline stylesheets into a `<style>` block. For images, reference workspace assets by their stable embed URL (upload via `Tatara:upload_asset`), or embed small one-offs as `data:` URIs. Hyperlinks (`<a href="https://…">`) are allowed — only resource loads are rejected. |
+| `external_reference` | Remote URLs (`http:`, `https:`, `//…`) in resource positions: `src`, `srcset`, `poster`, `background`, `<link href>`, CSS `url()`, `@import` | Inline stylesheets into a `<style>` block. For images, reference workspace assets by their stable embed URL (upload via `Tatara:upload_asset`), or embed small one-offs as `data:` URIs. Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) is the one allowed remote source. Hyperlinks (`<a href="https://…">`) are allowed — only resource loads are rejected. |
 | `size` | Body over 5 MB | Recompress or resize embedded images, or split into multiple documents. |
 | `empty` | An empty body | Send the document. |
 
@@ -71,8 +73,8 @@ Three traps the gate does NOT catch:
 
 - The document owns its entire presentation: all CSS in `<style>` blocks or
   inline (both allowed), `<meta charset="utf-8">` in the head, system font
-  stacks (embedding font files spends the byte budget fast; a `data:` URI
-  font is allowed but rarely worth it).
+  stacks or Google Fonts (embedding font files spends the byte budget fast;
+  a `data:` URI font is allowed but rarely worth it).
 - The iframe sizes itself to the document's height and its width follows the
   reader's pane — use responsive widths (`max-width`, percentages), not a
   fixed page width.

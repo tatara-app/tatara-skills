@@ -1,6 +1,6 @@
 # Embedding images in Tatara HTML documents
 
-The render sandbox blocks every remote network request, and the write gate
+The render sandbox blocks every remote image request, and the write gate
 rejects remote URLs in resource positions. Three mechanisms render — a workspace
 image asset referenced by its stable embed URL, inline SVG markup, or a
 `data:` URI. Everything else is rejected or silently broken.
@@ -119,7 +119,7 @@ size of an embedded image is often far larger than the pane.
 | `<img src="https://…/photo.png">` | Rejected — `external_reference` | `Tatara:upload_asset` with that URL as `source_url`, then embed the returned `embed_url` |
 | Embedding `get_asset`'s `download_url` | Rejected (remote URL) — and it expires in minutes anyway | Embed the stable `embed_url` |
 | `<img src="chart.png">` or an invented path | Passes the gate, renders broken — only the asset embed form serves bytes | Upload the image as an asset, or draw it inline |
-| Uploading an SVG via `upload_asset` | Rejected — raster formats only | Put the SVG markup inline in the document |
+| Uploading an SVG via `upload_asset` | Rejected — SVG is not a supported asset format | Put the SVG markup inline in the document |
 | Inventing a base64 string | Passes the gate, renders broken | Encode the real file |
 | Inlining a 4 MB screenshot as a `data:` URI | Rejected — `size` (base64 inflation) | Upload it as an asset and embed the `embed_url`, or resize + recompress first |
 | Chart via a charting library | Rejected — `script` | Draw the chart as inline SVG |
