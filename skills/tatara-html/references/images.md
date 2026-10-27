@@ -1,7 +1,7 @@
 # Embedding images in Tatara HTML documents
 
 The render sandbox blocks every remote network request, and the write gate
-rejects remote URLs in resource positions. Three mechanisms render — a brain
+rejects remote URLs in resource positions. Three mechanisms render — a workspace
 image asset referenced by its stable embed URL, inline SVG markup, or a
 `data:` URI. Everything else is rejected or silently broken.
 
@@ -9,15 +9,15 @@ image asset referenced by its stable embed URL, inline SVG markup, or a
 
 | The image is… | Use |
 | --- | --- |
-| A real raster — photo, screenshot, ad creative, generated image | A **brain image asset**: `Tatara:upload_asset`, then its `embed_url` |
-| Already in the brain as an image asset | Its `embed_url` (find it with `Tatara:search_documents`; fetch URLs with `Tatara:get_asset`) |
+| A real raster — photo, screenshot, ad creative, generated image | A **workspace image asset**: `Tatara:upload_asset`, then its `embed_url` |
+| Already in the workspace as an image asset | Its `embed_url` (find it with `Tatara:search_documents`; fetch URLs with `Tatara:get_asset`) |
 | A chart, diagram, icon, or illustration you can draw | Inline `<svg>` — no encoding step, crisp at any zoom, tiny |
 | A tiny one-off raster nobody will reuse | A `data:` URI |
 | Referenced by URL and you cannot obtain it any way | Don't fake it — draw an SVG placeholder or omit it, and tell the user why |
 
-## Brain image assets — the preferred route
+## Workspace image assets — the preferred route
 
-Images stored in the brain are governed **asset documents**: `file_type:
+Images stored in the workspace are governed **asset documents**: `file_type:
 image`, filed in the folder tree with a title, description, and tags,
 findable with `Tatara:search_documents` / `Tatara:list_documents` like any
 document. The bytes live in managed storage and stream from a stable,

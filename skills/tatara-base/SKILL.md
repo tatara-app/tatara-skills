@@ -1,6 +1,6 @@
 ---
 name: tatara-base
-description: Authors and edits Tatara base documents (render_format base) - a single base-fenced YAML code block defining filters, properties, and views over the documents in a brain, Tatara's saved-view and index format. Use when creating or updating a base, saved view, or document index in Tatara, or when a write is rejected with base format errors. Covers filter expressions and functions, property types (text, number, date, select with options), views (table type, order, sort, groupBy, limit, summaries), and the rule that nothing may appear outside the block.
+description: Authors and edits Tatara base documents (render_format base) - a single base-fenced YAML code block defining filters, properties, and views over the documents in a workspace, Tatara's saved-view and index format. Use when creating or updating a base, saved view, or document index in Tatara, or when a write is rejected with base format errors. Covers filter expressions and functions, property types (text, number, date, select with options), views (table type, order, sort, groupBy, limit, summaries), and the rule that nothing may appear outside the block.
 license: MIT
 compatibility: Requires the Tatara MCP server connected
 metadata:
@@ -12,7 +12,7 @@ metadata:
 ## Format contract
 
 - Bases are markdown documents with `render_format: "base"` — live table
-  views over the other documents in a brain. Rows are documents; columns are
+  views over the other documents in a workspace. Rows are documents; columns are
   universal properties (`title`, `description`, `type`, `tags`, `source`,
   `created`, `updated`, `folder`) and frontmatter keys. Create and update
   them with `Tatara:write_document`, passing `render_format: "base"` on
