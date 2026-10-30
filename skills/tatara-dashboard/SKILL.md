@@ -1,6 +1,6 @@
 ---
 name: tatara-dashboard
-description: Authors and edits Tatara dashboard documents (render_format dashboard) - a single dashboard-fenced YAML code block composing rows of live query blocks (stat, ratio, list, table, cards, bar) and curated blocks (links, prose, callout) into a brain homepage. Use when creating or updating a dashboard, homepage, overview, or home document in Tatara, or when a write is rejected with dashboard format errors. Covers the row and block layout (1-3 blocks per row), the shared base filter grammar, per-block keys and defaults, summarize ops, and the rule that nothing may appear outside the block.
+description: Authors and edits Tatara dashboard documents (render_format dashboard) - a single dashboard-fenced YAML code block composing rows of live query blocks (stat, ratio, list, table, cards, bar) and curated blocks (links, prose, callout) into a workspace homepage. Use when creating or updating a dashboard, homepage, overview, or home document in Tatara, or when a write is rejected with dashboard format errors. Covers the row and block layout (1-3 blocks per row), the shared base filter grammar, per-block keys and defaults, summarize ops, and the rule that nothing may appear outside the block.
 license: MIT
 compatibility: Requires the Tatara MCP server connected
 metadata:
@@ -12,10 +12,10 @@ metadata:
 ## Format contract
 
 - Dashboards are markdown documents with `render_format: "dashboard"` — a
-  composed, read-only homepage over the other documents in a brain. Every
-  query block re-runs live against the current documents; the dashboard
-  shows the brain as it is now, not as it was when written. Create and
-  update them with `Tatara:write_document`, passing
+  composed, read-only homepage over the other documents in a workspace.
+  Every query block re-runs live against the current documents; the
+  dashboard shows the workspace as it is now, not as it was when written.
+  Create and update them with `Tatara:write_document`, passing
   `render_format: "dashboard"` on create.
 - This skill is the body grammar only. The write workflow — search first,
   resolve the folder and tags with `Tatara:get_taxonomy`, and the fields a
@@ -124,7 +124,7 @@ rows:
           Verify [[Pricing]] after any plan change — this dashboard reads it live.
       - type: prose
         body: |-
-          Welcome to the brain. Every number here is a live query over the
+          Welcome to the workspace. Every number here is a live query over the
           documents; edit this dashboard by editing its YAML.
 ```
 ````
@@ -152,14 +152,14 @@ rows:
 ## Block reference
 
 Query blocks (`stat`, `ratio`, `list`, `table`, `cards`, `bar`) filter the
-brain's documents with the same expression grammar as the `base` format —
+workspace's documents with the same expression grammar as the `base` format —
 see the sibling skill `tatara-base` for the full grammar (comparisons,
 `&&` `||` `!`, `.contains()`, `.isEmpty()`, `file.hasTag()`,
 `file.inFolder()`, `date()` / `now()` / `today()`, and date ± `"duration"`
 arithmetic). Property references are also base's: a bare name (universal
 column or frontmatter key), `note.<key>`, or `file.name` / `file.ctime` /
 `file.mtime` / `file.folder` / `file.tags`. All query blocks accept an
-optional `href` — a brain document path rendered as a "See all" link.
+optional `href` — a document path rendered as a "See all" link.
 
 ### `stat` — one number
 
@@ -170,7 +170,7 @@ optional `href` — a brain document path rendered as a "See all" link.
 | `summarize` | no | `property:` + `op:` — aggregate that property over matching docs instead of counting them. Ops are base's case-sensitive summary names: `Empty`, `Filled`, `Unique`, `Sum`, `Average`, `Min`, `Max`, `Median`, `Range`, `Stddev`, `Earliest`, `Latest`, `Checked`, `Unchecked`. |
 | `href` | no | Doc path for the See-all link. |
 
-### `ratio` — share of the brain, with a meter
+### `ratio` — share of the workspace, with a meter
 
 | Key | Required | Value |
 | --- | --- | --- |

@@ -1,6 +1,6 @@
 ---
 name: tatara-html
-description: Authors and revises Tatara HTML documents (file_type html) - complete, self-contained, static HTML written with Tatara:create_html_document and rendered read-only in a sandboxed iframe. Use when creating a styled report, one-pager, or visual summary in a Tatara brain, when embedding images or charts in one, or when an HTML write is rejected with issues (incomplete, script, external_reference, size). Covers the complete-document rule, why JavaScript and external references never work, the 5 MB cap, embedding images from brain image assets (Tatara:upload_asset embed URLs), as inline SVG, or as base64 data URIs, and revising via Tatara:write_document.
+description: Authors and revises Tatara HTML documents (file_type html) - complete, self-contained, static HTML written with Tatara:create_html_document and rendered read-only in a sandboxed iframe. Use when creating a styled report, one-pager, or visual summary in a Tatara workspace, when embedding images or charts in one, or when an HTML write is rejected with issues (incomplete, script, external_reference, size). Covers the complete-document rule, why JavaScript never runs and external references are blocked (Google Fonts aside), the 5 MB cap, embedding images from workspace image assets (Tatara:upload_asset embed URLs), as inline SVG, or as base64 data URIs, and revising via Tatara:write_document.
 license: MIT
 compatibility: Requires the Tatara MCP server connected
 metadata:
@@ -27,19 +27,21 @@ metadata:
   one-pager, a visual summary a teammate opens by link. For prose, notes,
   or anything a teammate should edit, write markdown with
   `Tatara:write_document` instead. And know that an HTML document is a
-  static snapshot — for a live dashboard or homepage over the brain's own
+  static snapshot — for a live dashboard or homepage over the workspace's own
   documents, use the `dashboard` render format (sibling skill
   `tatara-dashboard`) rather than hand-drawing stale numbers.
 
 ## The render sandbox — why the rules exist
 
 The document renders in a sandboxed iframe that executes no JavaScript and
-whose Content-Security-Policy blocks every remote network request. Exactly
-one outside resource loads: a same-origin brain-asset image
+whose Content-Security-Policy blocks remote network requests. Two outside
+sources load: a same-origin workspace-asset image
 (`/api/brain/assets/<document_id>/content` — the CSP allows `img-src
-'self'`). Everything else — styling, fonts, data, any other image — must
-travel inside the document's own bytes. The write gate rejects the known
-breakers up front so you fix them before the document is ever stored.
+'self'`), and Google Fonts (stylesheets from `fonts.googleapis.com`, font
+files from `fonts.gstatic.com`). Everything else — styling, other fonts,
+data, any other image — must travel inside the document's own bytes. The
+write gate rejects the known breakers up front so you fix them before the
+document is ever stored.
 
 ## What the gate enforces
 
@@ -50,7 +52,7 @@ instructive entry per broken rule — fix each and resend; never retry blind.
 | --- | --- | --- |
 | `incomplete` | A fragment — no `<html>`…`</html>` root | Send a complete document: `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>`. |
 | `script` | Any `<script>` element | Remove it. Scripts never run; interactive or script-rendered content appears broken or empty. Inline the finished result as static HTML/CSS. |
-| `external_reference` | Remote URLs (`http:`, `https:`, `//…`) in resource positions: `src`, `srcset`, `poster`, `background`, `<link href>`, CSS `url()`, `@import` | Inline stylesheets into a `<style>` block. For images, reference brain assets by their stable embed URL (upload via `Tatara:upload_asset`), or embed small one-offs as `data:` URIs. Hyperlinks (`<a href="https://…">`) are allowed — only resource loads are rejected. |
+| `external_reference` | Remote URLs (`http:`, `https:`, `//…`) in resource positions: `src`, `srcset`, `poster`, `background`, `<link href>`, CSS `url()`, `@import` | Inline stylesheets into a `<style>` block. For images, reference workspace assets by their stable embed URL (upload via `Tatara:upload_asset`), or embed small one-offs as `data:` URIs. Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) is the one allowed remote source. Hyperlinks (`<a href="https://…">`) are allowed — only resource loads are rejected. |
 | `size` | Body over 5 MB | Recompress or resize embedded images, or split into multiple documents. |
 | `empty` | An empty body | Send the document. |
 
@@ -71,8 +73,8 @@ Three traps the gate does NOT catch:
 
 - The document owns its entire presentation: all CSS in `<style>` blocks or
   inline (both allowed), `<meta charset="utf-8">` in the head, system font
-  stacks (embedding font files spends the byte budget fast; a `data:` URI
-  font is allowed but rarely worth it).
+  stacks or Google Fonts (embedding font files spends the byte budget fast;
+  a `data:` URI font is allowed but rarely worth it).
 - The iframe sizes itself to the document's height and its width follows the
   reader's pane — use responsive widths (`max-width`, percentages), not a
   fixed page width.
@@ -85,7 +87,7 @@ Three traps the gate does NOT catch:
 
 Exactly three mechanisms put an image in a Tatara HTML document:
 
-1. **A brain image asset** — the preferred route for real rasters (photos,
+1. **A workspace image asset** — the preferred route for real rasters (photos,
    screenshots, generated images). Store the image with
    `Tatara:upload_asset` (or find an existing one), then reference its
    stable `embed_url`: `<img src="/api/brain/assets/<document_id>/content">`.

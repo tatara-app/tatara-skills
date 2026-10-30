@@ -1,7 +1,7 @@
 # Embedding images in Tatara HTML documents
 
-The render sandbox blocks every remote network request, and the write gate
-rejects remote URLs in resource positions. Three mechanisms render — a brain
+The render sandbox blocks every remote image request, and the write gate
+rejects remote URLs in resource positions. Three mechanisms render — a workspace
 image asset referenced by its stable embed URL, inline SVG markup, or a
 `data:` URI. Everything else is rejected or silently broken.
 
@@ -9,15 +9,15 @@ image asset referenced by its stable embed URL, inline SVG markup, or a
 
 | The image is… | Use |
 | --- | --- |
-| A real raster — photo, screenshot, ad creative, generated image | A **brain image asset**: `Tatara:upload_asset`, then its `embed_url` |
-| Already in the brain as an image asset | Its `embed_url` (find it with `Tatara:search_documents`; fetch URLs with `Tatara:get_asset`) |
+| A real raster — photo, screenshot, ad creative, generated image | A **workspace image asset**: `Tatara:upload_asset`, then its `embed_url` |
+| Already in the workspace as an image asset | Its `embed_url` (find it with `Tatara:search_documents`; fetch URLs with `Tatara:get_asset`) |
 | A chart, diagram, icon, or illustration you can draw | Inline `<svg>` — no encoding step, crisp at any zoom, tiny |
 | A tiny one-off raster nobody will reuse | A `data:` URI |
 | Referenced by URL and you cannot obtain it any way | Don't fake it — draw an SVG placeholder or omit it, and tell the user why |
 
-## Brain image assets — the preferred route
+## Workspace image assets — the preferred route
 
-Images stored in the brain are governed **asset documents**: `file_type:
+Images stored in the workspace are governed **asset documents**: `file_type:
 image`, filed in the folder tree with a title, description, and tags,
 findable with `Tatara:search_documents` / `Tatara:list_documents` like any
 document. The bytes live in managed storage and stream from a stable,
@@ -68,9 +68,12 @@ scales losslessly, and costs a fraction of the bytes of a raster.
 </svg>
 ```
 
-Rules inside the SVG: no `<script>` (the gate scans the whole body), no
-remote references (`<image href="https://…">`, remote fonts in SVG CSS —
-both rejected), size with `viewBox` plus CSS width so it scales.
+Rules inside the SVG: no `<script>` (the gate scans the whole body), and no
+remote references. A remote CSS `@import` or `url()` is rejected unless it
+points at Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`). An
+`<image href="https://…">` passes the gate but renders broken, because the
+sandbox blocks remote images. Size with `viewBox` plus CSS width so it
+scales.
 
 ## data: URIs
 
@@ -119,7 +122,7 @@ size of an embedded image is often far larger than the pane.
 | `<img src="https://…/photo.png">` | Rejected — `external_reference` | `Tatara:upload_asset` with that URL as `source_url`, then embed the returned `embed_url` |
 | Embedding `get_asset`'s `download_url` | Rejected (remote URL) — and it expires in minutes anyway | Embed the stable `embed_url` |
 | `<img src="chart.png">` or an invented path | Passes the gate, renders broken — only the asset embed form serves bytes | Upload the image as an asset, or draw it inline |
-| Uploading an SVG via `upload_asset` | Rejected — raster formats only | Put the SVG markup inline in the document |
+| Uploading an SVG via `upload_asset` | Rejected — SVG is not a supported asset format | Put the SVG markup inline in the document |
 | Inventing a base64 string | Passes the gate, renders broken | Encode the real file |
 | Inlining a 4 MB screenshot as a `data:` URI | Rejected — `size` (base64 inflation) | Upload it as an asset and embed the `embed_url`, or resize + recompress first |
 | Chart via a charting library | Rejected — `script` | Draw the chart as inline SVG |

@@ -1,25 +1,32 @@
 ---
 name: tatara
-description: Works with a company's Tatara brain over the Tatara MCP server - finding, reading, creating, organizing, and recovering governed documents and folders. Use when any task involves Tatara or its MCP tools - writing or updating documents, creating or moving folders, storing or embedding image assets, searching or listing company knowledge, tagging with the taxonomy, choosing a render format (kanban board, task tracker, data table, base view, mind map), or restoring deleted items. Covers the write workflow (search first, resolve the folder, then write), slug and wikilink behavior, universal keys, render_format selection, and how to recover when a write is rejected by a validation gate.
+description: Works with a company's Tatara workspace over the Tatara MCP server - finding, reading, creating, organizing, and recovering governed documents and folders. Use when any task involves Tatara or its MCP tools - writing or updating documents, creating or moving folders, storing or embedding image assets, searching or listing company knowledge, tagging with the taxonomy, choosing a render format (kanban board, task tracker, data table, base view, mind map), or restoring deleted items. Covers the write workflow (search first, resolve the folder, then write), slug and wikilink behavior, universal keys, render_format selection, and how to recover when a write is rejected by a validation gate.
 license: MIT
 compatibility: Requires the Tatara MCP server connected
 metadata:
   author: tatara-app
 ---
 
-# The Tatara brain
+# The Tatara workspace
 
 ## The model
 
-- A brain is a company's governed knowledge store: folders holding markdown
-  documents (plus static HTML documents and image assets). Agents and humans
-  read and write the same documents over the Tatara MCP server.
+- A workspace is a company's governed knowledge store: folders holding
+  markdown documents (plus static HTML documents and image and PDF assets).
+  People (in the Tatara app) and agents (over the Tatara MCP server) read
+  and write the same documents.
+- Each MCP connection is locked to one workspace: every read and write
+  goes to that workspace only, and no tool lists or switches workspaces.
+  To use another workspace, the user connects a separate entry or
+  re-authenticates this one.
 - Four universal keys live on every document — `title`, `type`,
   `description`, `tags` — set through explicit tool inputs, never as a YAML
   frontmatter block inside `body`. Universal keys placed in the optional
   `frontmatter` object are ignored (the explicit inputs are authoritative);
-  `frontmatter` is for custom keys only. `source` is stamped from your auth
-  token — never send it.
+  `frontmatter` is for custom keys only, and each key must be a registered
+  field from `Tatara:get_taxonomy`. An unregistered key or ill-typed value
+  rejects the whole write, and the rejection lists the registered fields.
+  `source` is stamped from your auth token — never send it.
 - Slugs are derived, never supplied: a document's slug and path come from its
   title, a folder's from its name. Retitling a document or renaming a folder
   re-derives its slug and path, and everything affected — descendant paths,
@@ -38,11 +45,11 @@ metadata:
 
 | Tool | Purpose |
 | --- | --- |
-| `Tatara:search_documents` | Full-text search across the brain — ranked results with snippets. Optional `type`, `folder`, and `tags` filters compose with the query. |
+| `Tatara:search_documents` | Full-text search across the workspace — ranked results with snippets. Optional `type`, `folder`, and `tags` filters compose with the query. |
 | `Tatara:list_documents` | Browse/enumerate when you have no search terms ("what is in this folder?", "what changed since …?"). Lightweight rows only; scope with `folder`, filter with `updated_since`, paginate with `cursor`. |
 | `Tatara:get_document` | Read one document by `id` or `path`: body, title, type, tags, custom metadata, links, and backlinks. |
-| `Tatara:get_taxonomy` | The brain's current shape: the real folders (write destinations), the document types in use, the tag registry, and the render-format catalog with canonical examples. Call once at the start of a session that may write; cache it. |
-| `Tatara:get_asset` | An image asset's metadata plus its two URLs: the stable `embed_url` for referencing the image inside document bodies, and a short-lived signed `download_url` for pulling the bytes (never store it in a document). Assets are ordinary documents with `file_type: image` — find their ids with search or list. |
+| `Tatara:get_taxonomy` | The workspace's current shape: its organization rules when it has them (follow them when choosing or creating folders), the real folders (write destinations), the document types in use, the tag registry, the custom-field registry (the only `frontmatter` keys writes accept), and the render-format catalog with canonical examples. Call once at the start of a session that may write; cache it. |
+| `Tatara:get_asset` | An image or PDF asset's metadata plus its two URLs: the stable `embed_url` for referencing the asset inside document bodies (only an image renders inline from it; a PDF does not display as an image), and a short-lived signed `download_url` for pulling the bytes (never store it in a document). Assets are ordinary documents with `file_type: image` or `pdf` — find their ids with search or list. |
 
 **Write**
 
@@ -51,16 +58,16 @@ metadata:
 | `Tatara:write_document` | Create or update a markdown document. Omit `target_document_id` to create (`type`, `folder`, `title`, `description`, `body`, `tags` all required); pass it to update as a partial patch — only the fields you send change. |
 | `Tatara:update_document` | Line edits: ordered string replacements (`old_string` → `new_string`) applied to the body only — title, type, tags, folder, and frontmatter are preserved. |
 | `Tatara:create_html_document` | Create a self-contained, static HTML report, dashboard, or visual summary (inline CSS, images via asset embed URLs or data: URIs, no JavaScript). Use when the visual layout is the point; for prose, write markdown. Create-only — revise by sending a replacement body through `Tatara:write_document`. Grammar and image embedding: sibling skill `tatara-html`. |
-| `Tatara:upload_asset` | Store an image (PNG/JPEG/WebP/GIF, ≤10 MB) as a governed asset document in the folder tree. Send `source_url` (preferred — the server fetches the bytes) or `data_base64`; the result's stable `embed_url` is how markdown and HTML documents reference the image. Create-only — revising an image means uploading a new asset. |
+| `Tatara:upload_asset` | Store an image or PDF (PNG/JPEG/WebP/GIF/PDF, ≤10 MB) as a governed asset document in the folder tree. Send `source_url` (preferred — the server fetches the bytes) or `data_base64`; the result's stable `embed_url` is how markdown and HTML documents reference the asset. Only an image renders inline from it; a PDF does not display as an image. Create-only; to revise an asset, upload a new one. |
 
 **Organize**
 
 | Tool | Purpose |
 | --- | --- |
-| `Tatara:create_folder` | Create exactly one folder: `name` plus optional `parent` (omit for top level). Reuse an existing folder wherever one fits; the slug is derived from the name. |
+| `Tatara:create_folder` | Create exactly one folder: `name` and `description` (one plain sentence on what belongs in the folder), plus optional `parent` (omit for top level). Reuse an existing folder wherever one fits; the slug is derived from the name. |
 | `Tatara:move_document` | Move a document to a different folder, or to the top level when `target_folder` is omitted. |
 | `Tatara:move_folder` | Move a folder — and everything inside it — under a new parent, or to the top level; contained paths update automatically. |
-| `Tatara:rename_folder` | Rename a folder; its slug and path re-derive from the new name and the paths of everything inside update to match. |
+| `Tatara:update_folder` | Rename a folder or update its description: `folder` (its slug or full path) plus `name`, `description`, or both. A new name re-derives the folder's slug and path, and the paths of everything inside update to match. |
 
 **Recover**
 
@@ -77,7 +84,7 @@ metadata:
    a new document — duplicates are common. Update the existing document
    rather than writing a twin.
 2. **`Tatara:get_taxonomy` before filing or tagging.** Folders and tags are
-   the brain's real, current shape, not a fixed schema. Tag from the
+   the workspace's real, current shape, not a fixed schema. Tag from the
    registry: exactly one tier-1 (area), up to two tier-2 (topic), up to two
    tier-3 (goal) — 1–5 tags total. Coin a new short kebab-case tag only when
    nothing in the registry fits; it is accepted and flagged for curation.
@@ -120,9 +127,9 @@ preserved — moved or edited documents keep their format.
 | `kanban` | a workflow board — columns of cards | sibling skill `tatara-kanban` |
 | `tracker` | a task checklist with tags, priority, and dates | sibling skill `tatara-tracker` |
 | `table` | typed records in a single grid | sibling skill `tatara-table` |
-| `base` | a saved view / index over the brain's other documents | sibling skill `tatara-base` |
+| `base` | a saved view / index over the workspace's other documents | sibling skill `tatara-base` |
 | `mindmap` | branching structure — topics radiating from the title | sibling skill `tatara-mindmap` |
-| `dashboard` | a composed homepage of live blocks over the brain's other documents | sibling skill `tatara-dashboard` |
+| `dashboard` | a composed homepage of live blocks over the workspace's other documents | sibling skill `tatara-dashboard` |
 | omitted | plain prose or notes — the default | — |
 
 Each format's body must parse and be byte-canonical; load the matching
