@@ -68,8 +68,7 @@ scales losslessly, and costs a fraction of the bytes of a raster.
 </svg>
 ```
 
-Rules inside the SVG: no `<script>` (the gate scans the whole body), and no
-remote references. A remote CSS `@import` or `url()` is rejected unless it
+Rules inside the SVG: no remote references. A remote CSS `@import` or `url()` is rejected unless it
 points at Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`). An
 `<image href="https://…">` passes the gate but renders broken, because the
 sandbox blocks remote images. Size with `viewBox` plus CSS width so it
@@ -125,4 +124,4 @@ size of an embedded image is often far larger than the pane.
 | Uploading an SVG via `upload_asset` | Rejected — SVG is not a supported asset format | Put the SVG markup inline in the document |
 | Inventing a base64 string | Passes the gate, renders broken | Encode the real file |
 | Inlining a 4 MB screenshot as a `data:` URI | Rejected — `size` (base64 inflation) | Upload it as an asset and embed the `embed_url`, or resize + recompress first |
-| Chart via a charting library | Rejected — `script` | Draw the chart as inline SVG |
+| Chart library from an unpinned URL | Rejected — `unpinned_version` | Pin the exact version (`https://esm.sh/<pkg>@<x.y.z>`), inline its data — or draw the chart as inline SVG |

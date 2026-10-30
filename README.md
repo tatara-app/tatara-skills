@@ -48,7 +48,7 @@ upload it in **Settings → Capabilities → Skills**.
 | `tatara-base` | Author bases (saved views): the single `base`-fenced YAML block — filters, properties, views. |
 | `tatara-mindmap` | Author mind maps: `## Heading` branches off the document title, nested `- ` topics, subtree edits. |
 | `tatara-dashboard` | Author dashboards (workspace homepages): rows of live stat / ratio / list / table / cards / bar blocks plus links, prose, and callouts. |
-| `tatara-html` | Author HTML documents: self-contained static reports, one-pagers, and visual summaries — images from workspace assets (`upload_asset` embed URLs), inline SVG, or `data:` URIs, the render-sandbox rules. |
+| `tatara-html` | Author HTML documents: reports, decks, and interactive prototypes whose scripts run in a sandbox (Motion, React, `htm` by name), the headless-browser check every write returns and how to fix from it, and images from workspace assets, inline SVG, or `data:` URIs. |
 
 ## License
 
