@@ -12,7 +12,8 @@ metadata:
 ## The model
 
 - A workspace is a company's governed knowledge store: folders holding
-  markdown documents (plus static HTML documents and image and PDF assets).
+  markdown documents (plus HTML documents, whose scripts run in a sandbox,
+  and image and PDF assets).
   People (in the Tatara app) and agents (over the Tatara MCP server) read
   and write the same documents.
 - Each MCP connection is locked to one workspace: every read and write
@@ -47,7 +48,7 @@ metadata:
 | --- | --- |
 | `Tatara:search_documents` | Full-text search across the workspace — ranked results with snippets. Optional `type`, `folder`, and `tags` filters compose with the query. |
 | `Tatara:list_documents` | Browse/enumerate when you have no search terms ("what is in this folder?", "what changed since …?"). Lightweight rows only; scope with `folder`, filter with `updated_since`, paginate with `cursor`. |
-| `Tatara:get_document` | Read one document by `id` or `path`: body, title, type, tags, custom metadata, links, and backlinks. |
+| `Tatara:get_document` | Read one document by `id` or `path`: body, title, type, tags, custom metadata, `content_hash`, `line_count`, links, and backlinks. `body: false` returns metadata only; `lines: [from, to]` returns that numbered slice instead of the body. For an HTML document, `verify: true` checks it in headless browsers now (sibling skill `tatara-html`). |
 | `Tatara:get_taxonomy` | The workspace's current shape: its organization rules when it has them (follow them when choosing or creating folders), the real folders (write destinations), the document types in use, the tag registry, the custom-field registry (the only `frontmatter` keys writes accept), and the render-format catalog with canonical examples. Call once at the start of a session that may write; cache it. |
 | `Tatara:get_asset` | An image or PDF asset's metadata plus its two URLs: the stable `embed_url` for referencing the asset inside document bodies (only an image renders inline from it; a PDF does not display as an image), and a short-lived signed `download_url` for pulling the bytes (never store it in a document). Assets are ordinary documents with `file_type: image` or `pdf` — find their ids with search or list. |
 
@@ -56,8 +57,8 @@ metadata:
 | Tool | Purpose |
 | --- | --- |
 | `Tatara:write_document` | Create or update a markdown document. Omit `target_document_id` to create (`type`, `folder`, `title`, `description`, `body`, `tags` all required); pass it to update as a partial patch — only the fields you send change. |
-| `Tatara:update_document` | Line edits: ordered string replacements (`old_string` → `new_string`) applied to the body only — title, type, tags, folder, and frontmatter are preserved. |
-| `Tatara:create_html_document` | Create a self-contained, static HTML report, dashboard, or visual summary (inline CSS, images via asset embed URLs or data: URIs, no JavaScript). Use when the visual layout is the point; for prose, write markdown. Create-only — revise by sending a replacement body through `Tatara:write_document`. Grammar and image embedding: sibling skill `tatara-html`. |
+| `Tatara:update_document` | Line edits: ordered string replacements (`old_string` → `new_string`) applied to the body only — title, type, tags, folder, and frontmatter are preserved. On an HTML document the edit must pass the HTML rules and returns `render`; it is the way to fix one. |
+| `Tatara:create_html_document` | Create a self-contained HTML report, deck, or interactive prototype. Scripts run in an isolated sandbox with no network; Motion, React, and `htm` import by name. Every HTML write returns `render`, what headless Chromium and WebKit saw. Use when the layout or interaction is the point; for prose, write markdown. Create-only — fix with `Tatara:update_document`, rewrite through `Tatara:write_document`. Grammar, the render loop, and images: sibling skill `tatara-html`. |
 | `Tatara:upload_asset` | Store an image or PDF (PNG/JPEG/WebP/GIF/PDF, ≤10 MB) as a governed asset document in the folder tree. Send `source_url` (preferred — the server fetches the bytes) or `data_base64`; the result's stable `embed_url` is how markdown and HTML documents reference the asset. Only an image renders inline from it; a PDF does not display as an image. Create-only; to revise an asset, upload a new one. |
 
 **Organize**
