@@ -50,6 +50,7 @@ upload it in **Settings → Capabilities → Skills**.
 | `tatara-dashboard` | Author dashboards (workspace homepages): rows of live stat / ratio / list / table / cards / bar blocks plus links, prose, and callouts. |
 | `tatara-html` | Author HTML documents: reports, decks, and interactive prototypes whose scripts run in a sandbox (Motion, React, `htm` by name), the headless-browser check every write returns and how to fix from it, and images from workspace assets, inline SVG, or `data:` URIs. |
 | `tatara-sheets` | Build and change workbooks: tables with typed columns, computed columns, and named cells with live formulas; read, filter, and calculate without reading every row; resend safely with `op_id`; recover from each refusal. |
+| `tatara-slides` | Author slide decks: one `<section id>` per slide on a 1920×1080 canvas, read by outline and line range, edit with `base_hash` so concurrent writers never overwrite each other, and fix the slides the render check says do not fit. |
 
 ## License
 
