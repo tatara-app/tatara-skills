@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "tatara",
-      "description": "Tatara MCP skills: core workflow plus the kanban, tracker, table, base, mindmap, dashboard, and HTML document formats",
+      "description": "Tatara MCP skills: core workflow plus the kanban, tracker, table, base, mindmap, dashboard, and HTML document formats, plus workbooks",
       "source": ".",
       "skills": [
         "./skills/tatara",
@@ -17,6 +17,7 @@
         "./skills/tatara-html",
         "./skills/tatara-kanban",
         "./skills/tatara-mindmap",
+        "./skills/tatara-sheets",
         "./skills/tatara-table",
         "./skills/tatara-tracker"
       ]

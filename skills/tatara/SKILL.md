@@ -1,6 +1,6 @@
 ---
 name: tatara
-description: Works with a company's Tatara workspace over the Tatara MCP server - finding, reading, creating, organizing, and recovering governed documents and folders. Use when any task involves Tatara or its MCP tools - writing or updating documents, creating or moving folders, storing or embedding image assets, searching or listing company knowledge, tagging with the taxonomy, choosing a render format (kanban board, task tracker, data table, base view, mind map), or restoring deleted items. Covers the write workflow (search first, resolve the folder, then write), slug and wikilink behavior, universal keys, render_format selection, and how to recover when a write is rejected by a validation gate.
+description: Works with a company's Tatara workspace over the Tatara MCP server - finding, reading, creating, organizing, and recovering governed documents and folders. Use when any task involves Tatara or its MCP tools - writing or updating documents, creating or moving folders, storing or embedding image assets, searching or listing company knowledge, tagging with the taxonomy, choosing a render format (kanban board, task tracker, data table, base view, mind map), working with workbooks (tables with live formulas), or restoring deleted items. Covers the write workflow (search first, resolve the folder, then write), slug and wikilink behavior, universal keys, render_format selection, and how to recover when a write is rejected by a validation gate.
 license: MIT
 compatibility: Requires the Tatara MCP server connected
 metadata:
@@ -12,8 +12,8 @@ metadata:
 ## The model
 
 - A workspace is a company's governed knowledge store: folders holding
-  markdown documents (plus HTML documents, whose scripts run in a sandbox,
-  and image and PDF assets).
+  markdown documents (plus HTML documents, whose scripts run in a sandbox;
+  workbooks of tables with live formulas; and image and PDF assets).
   People (in the Tatara app) and agents (over the Tatara MCP server) read
   and write the same documents.
 - Each MCP connection is locked to one workspace: every read and write
@@ -60,6 +60,19 @@ metadata:
 | `Tatara:update_document` | Line edits: ordered string replacements (`old_string` → `new_string`) applied to the body only — title, type, tags, folder, and frontmatter are preserved. On an HTML document the edit must pass the HTML rules and returns `render`; it is the way to fix one. |
 | `Tatara:create_html_document` | Create a self-contained HTML report, deck, or interactive prototype. Scripts run in an isolated sandbox with no network; Motion, React, and `htm` import by name. Every HTML write returns `render`, what headless Chromium and WebKit saw. Use when the layout or interaction is the point; for prose, write markdown. Create-only — fix with `Tatara:update_document`, rewrite through `Tatara:write_document`. Grammar, the render loop, and images: sibling skill `tatara-html`. |
 | `Tatara:upload_asset` | Store an image or PDF (PNG/JPEG/WebP/GIF/PDF, ≤10 MB) as a governed asset document in the folder tree. Send `source_url` (preferred — the server fetches the bytes) or `data_base64`; the result's stable `embed_url` is how markdown and HTML documents reference the asset. Only an image renders inline from it; a PDF does not display as an image. Create-only; to revise an asset, upload a new one. |
+
+**Workbooks**
+
+A workbook's content is read and written only with these four tools;
+`Tatara:write_document` and `Tatara:update_document` refuse it. Grammar and
+recovery: sibling skill `tatara-sheets`.
+
+| Tool | Purpose |
+| --- | --- |
+| `Tatara:describe_sheet` | A workbook's outline (tables, columns, formulas, named cells, errors, recent changes) and the `session` the other sheet tools take. Call it first. |
+| `Tatara:read_sheet` | Rows of one table (`columns`, `where`, `limit`, `offset`), named cells, or the change history. |
+| `Tatara:calculate_sheet` | Evaluate up to 20 formulas against a workbook; nothing is stored. Total, count, or look up with it instead of reading rows. |
+| `Tatara:write_sheet` | Create a workbook (`create`), or apply a batch of up to 100 operations to one, all or nothing, with a new `op_id` for each batch. Calculated values are formulas, never typed numbers. |
 
 **Organize**
 
@@ -135,6 +148,12 @@ preserved — moved or edited documents keep their format.
 
 Each format's body must parse and be byte-canonical; load the matching
 sibling skill before authoring or editing one.
+
+For anything calculated, such as a budget, a model, or a tracker with
+totals, make a workbook instead (`file_type: sheet`, with
+`Tatara:write_sheet`; sibling skill `tatara-sheets`). A workbook's formulas
+stay live, where a `table` document's formula columns are written into its
+body as values.
 
 ## Gate recovery
 
