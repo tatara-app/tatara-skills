@@ -49,6 +49,7 @@ upload it in **Settings → Capabilities → Skills**.
 | `tatara-mindmap` | Author mind maps: `## Heading` branches off the document title, nested `- ` topics, subtree edits. |
 | `tatara-dashboard` | Author dashboards (workspace homepages): rows of live stat / ratio / list / table / cards / bar blocks plus links, prose, and callouts. |
 | `tatara-html` | Author HTML documents: reports, decks, and interactive prototypes whose scripts run in a sandbox (Motion, React, `htm` by name), the headless-browser check every write returns and how to fix from it, and images from workspace assets, inline SVG, or `data:` URIs. |
+| `tatara-sheets` | Build and change workbooks: tables with typed columns, computed columns, and named cells with live formulas; read, filter, and calculate without reading every row; resend safely with `op_id`; recover from each refusal. |
 
 ## License
 
