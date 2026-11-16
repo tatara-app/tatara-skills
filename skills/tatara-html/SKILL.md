@@ -1,6 +1,6 @@
 ---
 name: tatara-html
-description: Authors and revises Tatara HTML documents (file_type html) - complete, self-contained HTML written with Tatara:create_html_document, whose JavaScript runs in an isolated sandbox with Motion, React and htm importable by name. Use when creating a styled report, one-pager, deck, interactive prototype, or animation in a Tatara workspace, when a write comes back with render errors or warnings, or when an HTML write is rejected with issues (incomplete, syntax, external_reference, unpinned_version, bare_import, size). Covers the sandbox (no network, pinned CDN imports, per-document storage), the render result every write returns from headless Chromium and WebKit, fixing from its line numbers with Tatara:update_document, re-checking with Tatara:get_document verify, the self-test tour, and embedding images from workspace assets, inline SVG, or data URIs.
+description: Authors and revises Tatara HTML documents (file_type html) - complete, self-contained HTML written with Tatara:create_html_document, whose JavaScript runs in an isolated sandbox with Motion, React and htm importable by name. Use when creating a styled report, one-pager, interactive prototype, or animation in a Tatara workspace (for a slide deck, use tatara-slides alongside it), when a write comes back with render errors or warnings, or when an HTML write is rejected with issues (incomplete, syntax, external_reference, unpinned_version, bare_import, size). Covers the sandbox (no network, pinned CDN imports, per-document storage), the render result every write returns from headless Chromium and WebKit, fixing from its line numbers with Tatara:update_document, re-checking with Tatara:get_document verify, the self-test tour, and embedding images from workspace assets, inline SVG, or data URIs.
 license: MIT
 compatibility: Requires the Tatara MCP server connected
 metadata:
@@ -27,7 +27,8 @@ metadata:
   when they opened it (see [Every write is checked](#every-write-is-checked)).
 - Use HTML when the visual layout or the interaction IS the point: a
   formatted report, a one-pager, a deck, an interactive prototype, an
-  animation. For prose, notes, or anything a teammate should edit, write
+  animation. A slide deck follows a fixed structure: sibling skill
+  `tatara-slides`. For prose, notes, or anything a teammate should edit, write
   markdown with `Tatara:write_document` instead. An HTML document has no
   network access, so its numbers are whatever you put in it — for a live
   view over the workspace's own documents, use the `dashboard` render format
