@@ -1,6 +1,6 @@
 ---
 name: tatara
-description: Works with a company's Tatara workspace over the Tatara MCP server - finding, reading, creating, organizing, and recovering governed documents and folders. Use when any task involves Tatara or its MCP tools - writing or updating documents, creating or moving folders, storing or embedding image assets, searching or listing company knowledge, tagging with the taxonomy, choosing a render format (kanban board, task tracker, data table, base view, mind map), working with workbooks (tables with live formulas), building slide decks, mapping related ideas on whiteboards, or restoring deleted items. Covers the write workflow (search first, resolve the folder, then write), slug and wikilink behavior, universal keys, render_format selection, and how to recover when a write is rejected by a validation gate.
+description: Works with a company's Tatara workspace over the Tatara MCP server - finding, reading, creating, organizing, and recovering governed documents and folders. Use when any task involves Tatara or its MCP tools - writing or updating documents, creating or moving folders, storing or embedding image assets, searching or listing company knowledge, tagging with the taxonomy, choosing a render format (kanban board, task tracker, data table, base view, mind map), working with workbooks (tables with live formulas), building slide decks, mapping related ideas on whiteboards, laying out KPIs and charts from a workbook on data pages, or restoring deleted items. Covers the write workflow (search first, resolve the folder, then write), slug and wikilink behavior, universal keys, render_format selection, and how to recover when a write is rejected by a validation gate.
 license: MIT
 compatibility: Requires the Tatara MCP server connected
 metadata:
@@ -14,7 +14,8 @@ metadata:
 - A workspace is a company's governed knowledge store: folders holding
   markdown documents (plus HTML documents, whose scripts run in a sandbox;
   workbooks of tables with live formulas; whiteboards of notes with named
-  relations between them; and image and PDF assets).
+  relations between them; data pages of figures bound to a workbook; and
+  image and PDF assets).
   People (in the Tatara app) and agents (over the Tatara MCP server) read
   and write the same documents.
 - Each MCP connection is locked to one workspace: every read and write
@@ -85,6 +86,18 @@ and recovery: sibling skill `tatara-whiteboard`.
 | --- | --- |
 | `Tatara:read_whiteboard` | With only `id` or `path`, the outline: purpose, conventions, declared kinds and relations, sections with their sizes, and `version`. Call it first. Then one of `section`, `nodes`, `around`, `walk` (follow one relation to the end), `search`, or `all`; or `export` the whole whiteboard as a file. |
 | `Tatara:write_whiteboard` | Create a whiteboard (`create`), or apply a batch of up to 500 operations to one, all or nothing, with the `version` you last got and a new `op_id` for each batch. Never positions: the page lays it out from sections and order. |
+
+**Data pages**
+
+A data page's content is read and written only with these two tools;
+`Tatara:write_document` and `Tatara:update_document` refuse it, though
+`Tatara:write_document` still changes its title and description. Blocks and
+recovery: sibling skill `tatara-data`.
+
+| Tool | Purpose |
+| --- | --- |
+| `Tatara:read_data_page` | With only `id` or `path`, the outline: title, description, `version`, the workbook with its version and last change, and what each block shows now. With `blocks` (1 to 10 block ids), those blocks in full: definition, what they show, and where each figure comes from, with its formula and when it last changed. Read it before saying what a page shows or how current it is. |
+| `Tatara:write_data_page` | Create a data page (`create`, naming its `workbook`), or apply a batch of up to 50 block operations to one, all or nothing, with the `version` you last got and a new `op_id` for each batch. Blocks bind to the workbook's named cells and table columns; the page stores no figure. |
 
 **Organize**
 
@@ -171,6 +184,13 @@ For ideas joined by named relations, such as causes and effects, a process,
 or dependencies, make a whiteboard instead (`file_type: whiteboard`, with
 `Tatara:write_whiteboard`; sibling skill `tatara-whiteboard`). Keep
 `mindmap` for a plain tree where every topic has one parent.
+
+For figures from a workbook laid out for people to read, such as KPIs, a
+scorecard, or a monthly report, make a data page (`file_type: data`, with
+`Tatara:write_data_page`; sibling skill `tatara-data`). Its blocks bind to
+the workbook's named cells and table columns, so put every figure and
+formula in the workbook first. Keep `dashboard` for counts and lists of the
+workspace's own documents, and the workbook for the figures themselves.
 
 ## Gate recovery
 

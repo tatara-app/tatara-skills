@@ -51,6 +51,7 @@ upload it in **Settings → Capabilities → Skills**.
 | `tatara-html` | Author HTML documents: reports, decks, and interactive prototypes whose scripts run in a sandbox (Motion, React, `htm` by name), the headless-browser check every write returns and how to fix from it, and images from workspace assets, inline SVG, or `data:` URIs. |
 | `tatara-sheets` | Build and change workbooks: tables with typed columns, computed columns, and named cells with live formulas; read, filter, and calculate without reading every row; resend safely with `op_id`; recover from each refusal. |
 | `tatara-slides` | Author slide decks: one `<section id>` per slide on a 1920×1080 canvas, read by outline and line range, edit with `base_hash` so concurrent writers never overwrite each other, and fix the slides the render check says do not fit. |
+| `tatara-data` | Build and change data pages: stats, charts, tables, and sentences bound to a workbook's named cells and columns, with every figure put in the workbook first, display keys such as `decimals`, a result that shows what each block now displays and where its figures come from, and recovery from each refusal. |
 | `tatara-whiteboard` | Build and change whiteboards: notes in sections with named relations between them, a vocabulary each whiteboard declares, reads from a small outline, a walk along one relation to its end, batches that several agents can write at once, and recovery from each refusal. |
 
 ## License

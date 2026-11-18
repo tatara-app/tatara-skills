@@ -17,6 +17,9 @@ metadata:
   dashboard shows the workspace as it is now, not as it was when written.
   Create and update them with `Tatara:write_document`, passing
   `render_format: "dashboard"` on create.
+- A dashboard counts and lists the workspace's own documents. For figures
+  from a workbook, such as revenue or a chart by month, make a data page
+  instead (sibling skill `tatara-data`).
 - This skill is the body grammar only. The write workflow — search first,
   resolve the folder and tags with `Tatara:get_taxonomy`, and the fields a
   create requires (`title`, `folder`, `type`, `description`, `tags`) — is
