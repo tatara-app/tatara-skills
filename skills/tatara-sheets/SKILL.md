@@ -1,6 +1,6 @@
 ---
 name: tatara-sheets
-description: Builds, reads, and changes Tatara workbooks (file_type sheet) - tables with named, typed columns, one formula per computed column, and named cells, all with live formulas. Use when creating or updating a budget, model, quote, forecast, or tracker with totals in Tatara, when totalling, counting, or looking up across rows of a workbook, or when a write_sheet call is rejected. Covers the describe, read, calculate, write loop, the session and op_id, the ops grammar, formula references, where filters, working alongside other agents, and how to recover from each refusal.
+description: Builds, reads, and changes Tatara workbooks (file_type sheet) - tables with named, typed columns, one formula per computed column, and named cells, all with live formulas. Use when creating or updating a budget, model, quote, forecast, or tracker with totals in Tatara, when totalling, counting, or looking up across rows of a workbook, or when a write_sheet call is rejected. Covers the describe, read, calculate, write loop, the session and op_id, the ops grammar, formula references, where filters, recording the call a table's rows came from, working alongside other agents, and how to recover from each refusal.
 license: MIT
 compatibility: Requires the Tatara MCP server connected
 metadata:
@@ -30,10 +30,12 @@ delete, and restore work as for any document.
 ## Start with the outline
 
 Call `Tatara:describe_sheet` with the workbook's `id` or `path`. It returns
-the purpose and notes, every table (row count, and each column's type, unit,
-formula, and range of values), the named cells with their values and
-formulas, any error cells, recent changes, and a `session`. The outline is
-the same size however many rows the workbook has.
+the purpose and notes, every table (its description, row count, when it
+last changed and who changed it (`changed`), the call that produced its rows
+if one is recorded (`source`), and each column's type, unit, formula, and
+range of values), the named cells with their values and formulas, any error
+cells, recent changes, and a `session`. The outline is the same size however
+many rows the workbook has.
 
 Pass that `session` to every later call on the same workbook. If a call says
 the session is not known or has expired, call `Tatara:describe_sheet` again
@@ -48,7 +50,8 @@ value, read it with `Tatara:read_sheet` or `Tatara:calculate_sheet`.
 
 - `table`: rows of that table. Choose `columns`, filter with `where`, and
   page with `limit` (default 50, at most 200) and `offset`. Each row comes
-  back as one array led by its row id, such as `r17`.
+  back as one array led by its row id, such as `r17`. The read also returns
+  the table's `description` and its full `source`, if one is recorded.
 - `names`: a list of named cells, or `"all"`.
 - `history`: `true` for the recent batches, or one batch's version number
   for its changes.
@@ -95,7 +98,7 @@ never applied twice. Never reuse an `op_id` for a different batch.
 One line an operation:
 
 ```
-{"op":"add_table","name":"line_items","description":"…","columns":[{"name":"line_id","type":"text"},{"name":"qty","type":"number"},{"name":"unit_cost","type":"number","unit":"AUD"},{"name":"amount","type":"number","unit":"AUD","formula":"=[qty]*[unit_cost]"}],"rows":[["L-1",2,195]]}   "rows" is optional: one array a row, its values in the order of the table's stored columns (those with no formula)
+{"op":"add_table","name":"line_items","description":"…","columns":[{"name":"line_id","type":"text"},{"name":"qty","type":"number"},{"name":"unit_cost","type":"number","unit":"AUD"},{"name":"amount","type":"number","unit":"AUD","formula":"=[qty]*[unit_cost]"}],"rows":[["L-1",2,195]]}   "rows" is optional: one array a row, its values in the order of the table's stored columns (those with no formula); so is "source", as set_table takes it
 {"op":"add_rows","table":"line_items","columns":["line_id","qty"],"rows":[["L-9",2]]}   computed columns fill themselves
 {"op":"update","table":"projects","row":"r17","set":{"system_kw":300}}   one row by id
 {"op":"update","table":"projects","where":{"project_id":{"eq":"P-014"}},"set":{…}}   one row by content; refused unless exactly one row matches
@@ -103,6 +106,7 @@ One line an operation:
 {"op":"add_column","table":"line_items","name":"tax","type":"number","formula":"=[amount]*gst_rate"}   omit "formula" for a stored column
 {"op":"set_column","table":"line_items","column":"tax","formula":"=[amount]*0.2"}   a computed column's formula; any column's unit or description
 {"op":"delete_column","table":"line_items","column":"tax"}
+{"op":"set_table","table":"alarms","description":"…","source":{"connector":"telemetry","tool":"query","args":{"dataset":"alarm_counts","day":"2026-11-17"},"note":"day is the latest complete day when the call is made."}}   a table's description, or the call that produced its rows: connector, tool and arguments as you made it, and, if an argument moves with time, a note saying which and what it is; either or both; null clears one
 {"op":"delete_table","table":"line_items"}
 {"op":"set_name","name":"gst_rate","value":0.1,"unit":"ratio","note":"…"}   or "formula":"=SUM(line_items[amount])"
 {"op":"delete_name","name":"gst_rate"}
@@ -169,6 +173,34 @@ session has read:
   current values or the row ids. Do what it says (check your batch against
   the values, read the listed rows, or calculate again), then resend with a
   new `op_id`.
+
+## Rows that came from another system
+
+When you load a table's rows from another system, such as a query through
+one of your connectors, record the call that produced them, so the next
+agent can run it again:
+
+```
+{"op":"set_table","table":"alarms","source":{"connector":"telemetry","tool":"query","args":{"dataset":"alarm_counts","day":"2026-11-17"},"note":"\"day\" moves with time: it is the latest complete day when the call is made."}}
+```
+
+- Send the call as you made it: `connector`, `tool`, and `args`. `note` is
+  optional.
+- If an argument moves with time, such as a day or a month, say so in the
+  note and say what it is. On a refresh, set it to what the note says, not
+  to the stored value.
+- After a refresh with a changed call, send `set_table` again with the new
+  call.
+- `set_table` changes a table's `description`, its `source`, or both, and
+  `null` clears one. It changes no cell. `add_table` takes the same
+  `source`.
+- `connector` is at most 80 characters, `tool` 120, and `note` 300; `args`
+  is at most 2,000 bytes as JSON.
+
+`Tatara:describe_sheet` shows each table's source, with who recorded it and
+when (`declared`), and when the table last changed (`changed`). When the
+outline has no room left for a source, it shows `"source":{"more":true}`:
+`Tatara:read_sheet` on that table returns it in full.
 
 ## Common rejections
 
